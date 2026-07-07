@@ -1,0 +1,25 @@
+﻿# Node
+node_modules/
+.next/
+out/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+.venv/
+
+# Environnement
+.env
+.env.local
+
+# Bases de données
+*.db
+*.sqlite
+
+# Autres
+.DS_Store
+*.log
+coverage/
