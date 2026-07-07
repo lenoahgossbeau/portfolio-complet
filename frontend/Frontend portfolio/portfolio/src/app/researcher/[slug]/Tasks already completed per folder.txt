@@ -1,0 +1,23 @@
+Tasks already completed per folder
+Project-root
+index.php
+Login.php
+Logout.php
+Config.php
+Database
+connection.php
+Modules
+ Insert_data.php
+Analyze_data.php
+Send_alert.php
+Aunthentication.php
+Dashboard 
+tanks.php
+Alerts.php
+Reports.php
+Settings.php
+Assets
+css
+Images
+Bootstrap
+Logs
