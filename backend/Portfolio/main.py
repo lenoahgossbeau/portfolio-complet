@@ -161,6 +161,16 @@ try:
 
     # ===================== STATIC & TEMPLATES =====================
     app.mount("/static", StaticFiles(directory="static"), name="static")
+
+    # Servir les fichiers uploadés (CV, avatars...)
+    os.makedirs("uploads", exist_ok=True)
+
+    app.mount(
+        "/uploads",
+        StaticFiles(directory="uploads"),
+        name="uploads",
+    )
+
     templates = Jinja2Templates(directory="templates")
 
     # ===================== SECURITY HEADERS =====================
@@ -784,10 +794,7 @@ try:
     # ===================== ERROR HANDLERS =====================
     @app.exception_handler(404)
     async def not_found_exception_handler(request: Request, exc: HTTPException):
-        ctx = base_context(request, None)
-        ctx["error_code"] = 404
-        ctx["error_message"] = "Page non trouvée"
-        return templates.TemplateResponse("error.html", ctx, status_code=404)
+        return JSONResponse(status_code=404, content={"error": "Page non trouvée", "code": 404})
 
     @app.exception_handler(429)
     async def rate_limit_exception_handler(request: Request, exc: HTTPException):
@@ -801,11 +808,8 @@ try:
         )
 
     @app.exception_handler(500)
-    async def internal_server_error_handler(request: Request, exc: HTTPException):
-        ctx = base_context(request, None)
-        ctx["error_code"] = 500
-        ctx["error_message"] = "Erreur interne du serveur"
-        return templates.TemplateResponse("error.html", ctx, status_code=500)
+    async def internal_server_error_handler(request: Request, exc: Exception):
+        return JSONResponse(status_code=500, content={"error": "Erreur interne du serveur", "code": 500})
 
     # ===================== LANGUE =====================
     @app.get("/lang/{lang_code}")

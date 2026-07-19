@@ -16,11 +16,9 @@ router = APIRouter(
     tags=["Profiles"]
 )
 
-# ===================== DOSSIER D'UPLOAD PHOTO =====================
 PHOTO_UPLOAD_DIR = "uploads/photos"
 os.makedirs(PHOTO_UPLOAD_DIR, exist_ok=True)
 
-# Schémas locaux (pour éviter les erreurs d'import)
 class ProfileOut(BaseModel):
     id: int
     user_id: int
@@ -66,32 +64,26 @@ def upload_photo(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Télécharge une photo pour le chercheur connecté"""
-    # Vérifier que c'est une image
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="Seuls les fichiers image sont acceptés")
     
-    # Vérifier la taille (max 2MB)
     file.file.seek(0, 2)
     size = file.file.tell()
     file.file.seek(0)
     if size > 2 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="L'image ne doit pas dépasser 2MB")
     
-    # Générer un nom de fichier unique
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     extension = file.filename.split('.')[-1]
     filename = f"photo_{current_user.id}_{timestamp}.{extension}"
     filepath = os.path.join(PHOTO_UPLOAD_DIR, filename)
     
-    # Sauvegarder le fichier
     try:
         with open(filepath, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload: {str(e)}")
     
-    # Mettre à jour le profil avec le chemin de la photo
     profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
     if not profile:
         raise HTTPException(status_code=404, detail="Profil non trouvé")
@@ -108,7 +100,6 @@ def upload_photo(
 # ================== CRÉER MON PROFIL ==================
 @router.post("/", response_model=ProfileOut)
 def create_profile(profile: ProfileCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    # Vérifier si le profil existe déjà
     existing = db.query(Profile).filter(Profile.user_id == current_user.id).first()
     if existing:
         raise HTTPException(status_code=400, detail="Profil déjà existant")
@@ -159,13 +150,9 @@ def get_my_profile(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    """Récupère le profil de l'utilisateur connecté"""
     profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
     if not profile:
-        raise HTTPException(
-            status_code=404,
-            detail="Profil non trouvé ❌"
-        )
+        raise HTTPException(status_code=404, detail="Profil non trouvé ❌")
     return {
         "id": profile.id,
         "user_id": profile.user_id,
@@ -184,20 +171,31 @@ def get_my_profile(
 # ================== LIRE UN PROFIL PAR ID ==================
 @router.get("/{profile_id}", response_model=ProfileOut)
 def get_profile(
-    profile_id: int, 
-    db: Session = Depends(get_db), 
+    profile_id: int,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    profile = db.query(Profile).filter(
-        Profile.id == profile_id,
-        Profile.user_id == current_user.id
-    ).first()
+    # ✅ CORRECTION PRINCIPALE :
+    # Le frontend envoie profile.id (pas user.id)
+    # On cherche toujours par Profile.id
+    if current_user.role in ["admin", "super_admin"]:
+        # Admin : accès à tous les profils par profile.id
+        profile = db.query(Profile).filter(
+            Profile.id == profile_id
+        ).first()
+    else:
+        # Chercheur : accès uniquement à son propre profil
+        profile = db.query(Profile).filter(
+            Profile.id == profile_id,
+            Profile.user_id == current_user.id
+        ).first()
 
     if not profile:
         raise HTTPException(
             status_code=404,
             detail="Profil non trouvé ❌"
         )
+
     return {
         "id": profile.id,
         "user_id": profile.user_id,
@@ -271,6 +269,61 @@ def update_my_profile(
         "github": profile.github
     }
 
+# ================== METTRE À JOUR UN PROFIL PAR USER ID (ADMIN) ==================
+@router.put("/{user_id}", response_model=ProfileOut)
+def update_profile(
+    user_id: int,
+    data: ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in ["admin", "super_admin"]:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+
+    profile = db.query(Profile).filter(Profile.user_id == user_id).first()
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profil introuvable")
+
+    if data.first_name is not None:
+        profile.first_name = data.first_name
+    if data.last_name is not None:
+        profile.last_name = data.last_name
+    if data.grade is not None:
+        profile.grade = data.grade
+    if data.bio is not None:
+        profile.description = data.bio
+    if data.avatar is not None:
+        profile.profile_picture = data.avatar
+    if data.email is not None:
+        profile.email = data.email
+    if data.linkedin is not None:
+        profile.linkedin = data.linkedin
+    if data.whatsapp is not None:
+        profile.whatsapp = data.whatsapp
+    if data.twitter is not None:
+        profile.twitter = data.twitter
+    if data.github is not None:
+        profile.github = data.github
+
+    db.commit()
+    db.refresh(profile)
+
+    return {
+        "id": profile.id,
+        "user_id": profile.user_id,
+        "first_name": profile.first_name,
+        "last_name": profile.last_name,
+        "grade": profile.grade,
+        "bio": profile.description,
+        "avatar": profile.profile_picture,
+        "email": profile.email,
+        "linkedin": profile.linkedin,
+        "whatsapp": profile.whatsapp,
+        "twitter": profile.twitter,
+        "github": profile.github
+    }
+
 # ================== SUPPRIMER MON PROFIL ==================
 @router.delete("/me")
 def delete_my_profile(
@@ -293,4 +346,3 @@ def delete_my_profile(
     db.commit()
 
     return {"message": "Profil supprimé ✅"}
-

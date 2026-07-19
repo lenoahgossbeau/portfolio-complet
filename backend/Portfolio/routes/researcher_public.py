@@ -75,6 +75,13 @@ def get_public_researcher_by_slug(slug: str, db: Session = Depends(get_db)):
         "lastName": profile.last_name if profile else "",
         "profession": profile.grade if profile else "",
         "bio": profile.bio if profile else "",
+        "description": profile.description if profile else "",
+        "specialite": profile.specialite if profile else "",
+        "diplome": profile.diplome if profile else "",
+        "linkedin": profile.linkedin if profile else "",
+        "github": profile.github if profile else "",
+        "twitter": profile.twitter if profile else "",
+        "whatsapp": profile.whatsapp if profile else "",
         "cvUrl": profile.cv_url if profile else "",
         "avatar": profile.profile_picture if profile else "",
         "publications": [
@@ -97,31 +104,52 @@ def get_public_researcher_by_slug(slug: str, db: Session = Depends(get_db)):
             }
             for proj in projects
         ],
-        # ✅ AJOUT : Données du CV avec les bonnes classes
-        "cv": {
-            "skills_tech": [{"name": s.skill_name, "level": s.level} for s in skills_tech],
-            "skills_soft": [{"name": s.skill_name} for s in skills_soft],
-            "languages": [{"name": l.language, "level": l.level} for l in languages],
-            "degrees": [
-                {
-                    "title": d.title,
-                    "institution": d.institution,
-                    "year": d.year,
-                    "description": d.description
-                }
-                for d in degrees
-            ],
-            "experiences": [
-                {
-                    "title": e.title,
-                    "company": e.company,
-                    "start_date": e.start_date.isoformat() if e.start_date else None,
-                    "end_date": e.end_date.isoformat() if e.end_date else None,
-                    "description": e.description
-                }
-                for e in experiences
-            ]
-        }
+        "technical_skills": [
+            {
+                "id": s.id,
+                "name": s.skill_name,
+                "level": s.level
+            }
+            for s in skills_tech
+        ],
+        "soft_skills": [
+            {
+                "id": s.id,
+                "name": s.skill_name,
+                "level": 100
+            }
+            for s in skills_soft
+        ],
+        "languages": [
+            {
+                "id": l.id,
+                "name": l.language,
+                "level": l.level,
+                "percent": 100
+            }
+            for l in languages
+        ],
+        "degrees": [
+            {
+                "id": d.id,
+                "title": d.title,
+                "institution": d.institution,
+                "year": d.year,
+                "description": d.description
+            }
+            for d in degrees
+        ],
+        "experiences": [
+            {
+                "id": e.id,
+                "title": e.title,
+                "company": e.company,
+                "start_date": e.start_date.isoformat() if e.start_date else None,
+                "end_date": e.end_date.isoformat() if e.end_date else None,
+                "description": e.description
+            }
+            for e in experiences
+        ]
     }
 
 # ====================== ROUTE PAR ID ======================
@@ -161,6 +189,13 @@ def get_public_researcher_by_id(user_id: int, db: Session = Depends(get_db)):
         "lastName": profile.last_name if profile else "",
         "profession": profile.grade if profile else "",
         "bio": profile.bio if profile else "",
+        "description": profile.description if profile else "",
+        "specialite": profile.specialite if profile else "",
+        "diplome": profile.diplome if profile else "",
+        "linkedin": profile.linkedin if profile else "",
+        "github": profile.github if profile else "",
+        "twitter": profile.twitter if profile else "",
+        "whatsapp": profile.whatsapp if profile else "",
         "cvUrl": profile.cv_url if profile else "",
         "avatar": profile.profile_picture if profile else "",
         "publications": [
@@ -183,29 +218,50 @@ def get_public_researcher_by_id(user_id: int, db: Session = Depends(get_db)):
             }
             for proj in projects
         ],
-        # ✅ AJOUT : Données du CV avec les bonnes classes
-        "cv": {
-            "skills_tech": [{"name": s.skill_name, "level": s.level} for s in skills_tech],
-            "skills_soft": [{"name": s.skill_name} for s in skills_soft],
-            "languages": [{"name": l.language, "level": l.level} for l in languages],
-            "degrees": [
-                {
-                    "title": d.title,
-                    "institution": d.institution,
-                    "year": d.year,
-                    "description": d.description
-                }
-                for d in degrees
-            ],
-            "experiences": [
-                {
-                    "title": e.title,
-                    "company": e.company,
-                    "start_date": e.start_date.isoformat() if e.start_date else None,
-                    "end_date": e.end_date.isoformat() if e.end_date else None,
-                    "description": e.description
-                }
-                for e in experiences
-            ]
-        }
+        "technical_skills": [
+            {
+                "id": s.id,
+                "name": s.skill_name,
+                "level": s.level
+            }
+            for s in skills_tech
+        ],
+        "soft_skills": [
+            {
+                "id": s.id,
+                "name": s.skill_name,
+                "level": 100
+            }
+            for s in skills_soft
+        ],
+        "languages": [
+            {
+                "id": l.id,
+                "name": l.language,
+                "level": l.level,
+                "percent": 100
+            }
+            for l in languages
+        ],
+        "degrees": [
+            {
+                "id": d.id,
+                "title": d.title,
+                "institution": d.institution,
+                "year": d.year,
+                "description": d.description
+            }
+            for d in degrees
+        ],
+        "experiences": [
+            {
+                "id": e.id,
+                "title": e.title,
+                "company": e.company,
+                "start_date": e.start_date.isoformat() if e.start_date else None,
+                "end_date": e.end_date.isoformat() if e.end_date else None,
+                "description": e.description
+            }
+            for e in experiences
+        ]
     }

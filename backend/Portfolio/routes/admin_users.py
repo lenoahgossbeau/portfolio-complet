@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, HTMLResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from io import StringIO
 import csv
 import json
@@ -25,11 +26,9 @@ admin_users_router = APIRouter(
 
 templates = Jinja2Templates(directory="templates")
 
-# Schéma pour le changement de rôle
 class RoleChangeRequest(BaseModel):
     role: str
 
-# Schéma pour la création d’un utilisateur
 class UserCreateRequest(BaseModel):
     email: str
     password: str
@@ -38,7 +37,7 @@ class UserCreateRequest(BaseModel):
     role: str = "researcher"
 
 # ======================
-# LISTE DES UTILISATEURS (JSON) avec audit
+# LISTE DES UTILISATEURS
 # ======================
 @admin_users_router.get("/")
 def list_users(
@@ -47,7 +46,7 @@ def list_users(
     role: str = Query(None),
     status: str = Query(None),
     page: int = Query(1, ge=1),
-    per_page: int = Query(100, ge=1, le=200)  # ✅ Changé de 10 à 100
+    per_page: int = Query(100, ge=1, le=200)
 ):
     if current_user.role not in ["admin", "super_admin"]:
         raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
@@ -82,8 +81,11 @@ def list_users(
                 "role": u.role,
                 "status": u.status,
                 "profile": {
+                    "id": u.profile.id,
                     "first_name": u.profile.first_name if u.profile else None,
-                    "last_name": u.profile.last_name if u.profile else None
+                    "last_name": u.profile.last_name if u.profile else None,
+                    "grade": u.profile.grade if u.profile else None,
+                    "specialite": u.profile.specialite if hasattr(u.profile, 'specialite') else None,
                 } if u.profile else None
             }
             for u in users
@@ -91,7 +93,7 @@ def list_users(
     }
 
 # ======================
-# CRÉATION D’UN UTILISATEUR (par l’admin)
+# CRÉATION D'UN UTILISATEUR
 # ======================
 @admin_users_router.post("/", status_code=201)
 def create_user(
@@ -106,7 +108,6 @@ def create_user(
     if existing:
         raise HTTPException(status_code=400, detail="Email déjà utilisé")
 
-    # Hachage du mot de passe
     hashed = bcrypt.hashpw(payload.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     is_admin_role = payload.role in ["admin", "super_admin"]
@@ -133,13 +134,12 @@ def create_user(
         token = create_activation_token(new_user.email)
         activation_link = f"http://localhost:3000/auth/activate?token={token}"
         print(f"\n🔗 LIEN D'ACTIVATION POUR {new_user.email} :\n{activation_link}\n")
-        return {"message": "Chercheur créé avec succès. Un email d'activation lui a été envoyé.", "user_id": new_user.id}
+        return {"message": "Chercheur créé avec succès.", "user_id": new_user.id}
     else:
-        print(f"\n✅ Admin {new_user.email} créé et activé directement.\n")
-        return {"message": f"Admin {payload.role} créé avec succès (compte actif)", "user_id": new_user.id}
+        return {"message": f"Admin {payload.role} créé avec succès", "user_id": new_user.id}
 
 # ======================
-# EXPORT CSV avec audit
+# EXPORT CSV
 # ======================
 @admin_users_router.get("/export")
 def export_users(
@@ -164,10 +164,7 @@ def export_users(
     writer.writerow(["ID", "Email", "Role", "Status", "Prénom", "Nom"])
     for u in users:
         writer.writerow([
-            u.id, 
-            u.email, 
-            u.role, 
-            u.status,
+            u.id, u.email, u.role, u.status,
             u.profile.first_name if u.profile else "",
             u.profile.last_name if u.profile else ""
         ])
@@ -177,7 +174,7 @@ def export_users(
     audit_log = Audit(
         user_id=current_user.id,
         user_role=current_user.role,
-        action_description=f"Export CSV utilisateurs (role={role}, status={status})",
+        action_description=f"Export CSV utilisateurs",
         date=datetime.now(timezone.utc)
     )
     db.add(audit_log)
@@ -197,7 +194,7 @@ def users_page(request: Request, current_user: User = Depends(get_current_user))
     return templates.TemplateResponse(request, "users.html")
 
 # ======================
-# CHANGER LE RÔLE D'UN UTILISATEUR
+# CHANGER LE RÔLE
 # ======================
 @admin_users_router.put("/{user_id}/role")
 def change_user_role(
@@ -238,6 +235,181 @@ def change_user_role(
     }
 
 # ======================
+# DETAIL D'UN UTILISATEUR
+# ======================
+@admin_users_router.get("/{user_id}")
+def get_user_details(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in ["admin", "super_admin"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux administrateurs"
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Utilisateur non trouvé"
+        )
+
+    profile_id = user.profile.id if user.profile else None
+
+    technical_skills = []
+    soft_skills = []
+    languages = []
+    degrees = []
+    experiences = []
+
+    if profile_id:
+        # Technical skills
+        tech_result = db.execute(
+            text("SELECT id, skill_name, level FROM technical_skills WHERE profile_id = :pid"),
+            {"pid": profile_id}
+        )
+
+        technical_skills = [
+            {
+                "id": row[0],
+                "name": row[1],
+                "level": row[2]
+            }
+            for row in tech_result
+        ]
+
+        # Soft skills
+        soft_result = db.execute(
+            text("SELECT id, skill_name FROM soft_skills WHERE profile_id = :pid"),
+            {"pid": profile_id}
+        )
+
+        soft_skills = [
+            {
+                "id": row[0],
+                "name": row[1],
+                "level": 50
+            }
+            for row in soft_result
+        ]
+
+        # Langues
+        lang_result = db.execute(
+            text("SELECT id, language, level FROM languages WHERE profile_id = :pid"),
+            {"pid": profile_id}
+        )
+
+        languages = [
+            {
+                "id": row[0],
+                "name": row[1],
+                "level": row[2],
+                "percent": 50
+            }
+            for row in lang_result
+        ]
+
+        # Diplômes
+        degree_result = db.execute(
+            text("SELECT id, title, institution, year, description FROM degrees WHERE profile_id = :pid"),
+            {"pid": profile_id}
+        )
+
+        degrees = [
+            {
+                "id": row[0],
+                "title": row[1],
+                "institution": row[2],
+                "year": row[3],
+                "description": row[4] or ""
+            }
+            for row in degree_result
+        ]
+
+        # Expériences
+        exp_result = db.execute(
+            text("SELECT id, title, company, start_date, end_date, description FROM experiences WHERE profile_id = :pid"),
+            {"pid": profile_id}
+        )
+
+        experiences = [
+            {
+                "id": row[0],
+                "title": row[1],
+                "company": row[2],
+                "start_date": str(row[3]),
+                "end_date": str(row[4]) if row[4] else None,
+                "description": row[5] or ""
+            }
+            for row in exp_result
+        ]
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "status": user.status,
+        "profile": {
+            "first_name": user.profile.first_name if user.profile else None,
+            "last_name": user.profile.last_name if user.profile else None,
+            "grade": user.profile.grade if user.profile else None,
+            "specialite": getattr(user.profile, "specialite", None) if user.profile else None,
+            "diplome": getattr(user.profile, "diplome", None) if user.profile else None,
+            "bio": getattr(user.profile, "bio", None) if user.profile else None,
+            "description": getattr(user.profile, "description", None) if user.profile else None,
+            "avatar": user.profile.profile_picture if user.profile else None,
+            "profile_picture": user.profile.profile_picture if user.profile else None,
+            "linkedin": getattr(user.profile, "linkedin", None) if user.profile else None,
+            "whatsapp": getattr(user.profile, "whatsapp", None) if user.profile else None,
+            "twitter": getattr(user.profile, "twitter", None) if user.profile else None,
+            "github": getattr(user.profile, "github", None) if user.profile else None,
+        } if user.profile else None,
+        "project_count": len(user.profile.projects) if user.profile else 0,
+        "publication_count": len(user.profile.publications) if user.profile else 0,
+        "cv_url": user.profile.cv_url if user.profile else None,
+        "projects": [
+            {
+                "id": project.id,
+                "title": project.title,
+                "year": project.year,
+                "description": project.description,
+                "budget": float(project.budget) if project.budget else None,
+                "coauthor": project.coauthor,
+            }
+            for project in (user.profile.projects if user.profile else [])
+        ],
+        "publications": [
+            {
+                "id": publication.id,
+                "title": publication.title,
+                "year": publication.year,
+                "journal": publication.journal,
+                "doi": publication.doi,
+                "coauthor": publication.coauthor,
+            }
+            for publication in (user.profile.publications if user.profile else [])
+        ],
+        "academic_careers": [
+            {
+                "id": career.id,
+                "year": career.year,
+                "title_formation": career.title_formation,
+                "diplome": career.diplome,
+                "description": career.description,
+            }
+            for career in (user.profile.academic_careers if user.profile else [])
+        ],
+        "technical_skills": technical_skills,
+        "soft_skills": soft_skills,
+        "languages": languages,
+        "degrees": degrees,
+        "experiences": experiences,
+    }
+
+# ======================
 # SUPPRIMER UN UTILISATEUR
 # ======================
 @admin_users_router.delete("/{user_id}", status_code=204)
@@ -263,14 +435,13 @@ def delete_user(
         date=datetime.now(timezone.utc)
     )
     db.add(audit_log)
-    
     db.delete(user)
     db.commit()
     
     return None
 
 # ======================
-# IMPORT CONTENU INITIAL (CHERCHEUR)
+# IMPORT CONTENU INITIAL
 # ======================
 @admin_users_router.post("/{user_id}/import-content")
 def import_content(
@@ -298,11 +469,9 @@ def import_content(
         profile = Profile(user_id=user.id)
         db.add(profile)
     
-    # 1. Mettre à jour la bio
     if bio:
         profile.bio = bio
     
-    # 2. Sauvegarder le CV (PDF)
     if cv:
         cv_dir = "uploads/cv"
         os.makedirs(cv_dir, exist_ok=True)
@@ -312,7 +481,6 @@ def import_content(
             shutil.copyfileobj(cv.file, buffer)
         profile.cv_url = f"/{cv_path}"
     
-    # 3. Sauvegarder la photo
     if photo:
         photo_dir = "uploads/photos"
         os.makedirs(photo_dir, exist_ok=True)
@@ -322,7 +490,6 @@ def import_content(
             shutil.copyfileobj(photo.file, buffer)
         profile.avatar = f"/{photo_path}"
     
-    # 4. Importer les publications via la route interne
     if publications:
         try:
             data = json.load(publications.file)
@@ -339,12 +506,9 @@ def import_content(
                     json=pub_data,
                     headers={"Authorization": f"Bearer {token}"}
                 )
-                if response.status_code != 201:
-                    print(f"Erreur import publication: {response.text}")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erreur publication JSON: {e}")
     
-    # 5. Importer les projets via la route interne
     if projects:
         try:
             data = json.load(projects.file)
@@ -361,8 +525,6 @@ def import_content(
                     json=proj_data,
                     headers={"Authorization": f"Bearer {token}"}
                 )
-                if response.status_code != 201:
-                    print(f"Erreur import projet: {response.text}")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erreur projet JSON: {e}")
     
@@ -374,4 +536,62 @@ def import_content(
         "bio_updated": bool(bio),
         "cv_uploaded": cv is not None,
         "photo_uploaded": photo is not None
+    }
+
+# ======================
+# ACTIVER / DÉSACTIVER
+# ======================
+@admin_users_router.put("/{user_id}/status")
+def change_user_status(
+    user_id: int,
+    active: bool,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in ["admin", "super_admin"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux administrateurs"
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Utilisateur non trouvé"
+        )
+
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="Vous ne pouvez pas modifier votre propre statut"
+        )
+
+    user.is_active = active
+    user.status = "active" if active else "inactive"
+
+    audit_log = Audit(
+        user_id=current_user.id,
+        user_role=current_user.role,
+        action_description=(
+            f"{'Activation' if active else 'Désactivation'} "
+            f"de l'utilisateur {user.email} (ID: {user.id})"
+        ),
+        date=datetime.now(timezone.utc)
+    )
+
+    db.add(audit_log)
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": (
+            "Utilisateur activé avec succès"
+            if active
+            else "Utilisateur désactivé avec succès"
+        ),
+        "user_id": user.id,
+        "status": user.status,
+        "is_active": user.is_active
     }

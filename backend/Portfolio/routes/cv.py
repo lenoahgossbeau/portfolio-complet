@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
@@ -329,3 +330,65 @@ def delete_experience(exp_id: int, db: Session = Depends(get_db), current_user: 
     db.execute(text("DELETE FROM experiences WHERE id = :eid AND profile_id = :pid"), {"eid": exp_id, "pid": profile.id})
     db.commit()
     return {"message": "Expérience supprimée"}
+
+# ==================== VIEW CV ====================
+@router.get("/view/{user_id}")
+def view_cv(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    profile = db.query(Profile).filter(
+        Profile.user_id == user_id
+    ).first()
+
+    if not profile or not profile.cv_url:
+        raise HTTPException(
+            status_code=404,
+            detail="CV introuvable"
+        )
+
+    file_path = profile.cv_url.lstrip("/")
+
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=404,
+            detail="Fichier introuvable"
+        )
+
+    with open(file_path, "rb") as pdf:
+        pdf_bytes = pdf.read()
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": "inline; filename=cv.pdf",
+            "Cache-Control": "no-cache",
+            "X-Content-Type-Options": "nosniff"
+        }
+    )
+
+# ==================== DOWNLOAD CV ====================
+@router.get("/download/{user_id}")
+def download_cv(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    profile = db.query(Profile).filter(Profile.user_id == user_id).first()
+
+    if not profile or not profile.cv_url:
+        raise HTTPException(status_code=404, detail="CV introuvable")
+
+    file_path = profile.cv_url.lstrip("/")
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Fichier introuvable")
+
+    return FileResponse(
+        path=file_path,
+        media_type="application/pdf",
+        filename=os.path.basename(file_path),
+        headers={
+            "Content-Disposition": "attachment"
+        }
+    )

@@ -44,6 +44,18 @@ def list_users(
     total = query.count()
     users = query.offset((page - 1) * per_page).limit(per_page).all()
 
+    # ========== LIGNES DE DÉBOGAGE AJOUTÉES ==========
+    print("========== USERS ENVOYÉS AU FRONT ==========")
+    for u in users:
+        print(
+            "user.id =", u.id,
+            "| profile.id =", u.profile.id if u.profile else None,
+            "| nom =", u.profile.first_name if u.profile else None,
+            u.profile.last_name if u.profile else None,
+        )
+    print("============================================")
+    # ================================================
+
     # ✅ Audit log : consultation avec filtres et pagination
     audit_log = Audit(
         user_id=current_user.id,
@@ -64,7 +76,14 @@ def list_users(
                 "id": u.id,
                 "email": u.email,
                 "role": u.role,
-                "status": u.status
+                "status": u.status,
+                "profile": {
+                    "id": u.profile.id,
+                    "first_name": u.profile.first_name,
+                    "last_name": u.profile.last_name,
+                    "grade": u.profile.grade,
+                    "specialite": u.profile.specialite
+                } if u.profile else None
             }
             for u in users
         ]
