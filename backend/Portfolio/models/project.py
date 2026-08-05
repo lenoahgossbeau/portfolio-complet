@@ -15,8 +15,12 @@ class Project(Base):
     coauthor = Column(JSON, nullable=False, default=list)
 
     # 🟢 OPTIONNELS
-    description = Column(Text)
-    budget = Column(Numeric(10, 2))
+    description = Column(Text, nullable=True)
+    budget = Column(Numeric(10, 2), nullable=True)
+
+    # ✅ NOUVEAUX CHAMPS
+    image = Column(Text, nullable=True)
+    link = Column(Text, nullable=True)
 
     created_at = Column(TIMESTAMP, server_default=func.now())
 

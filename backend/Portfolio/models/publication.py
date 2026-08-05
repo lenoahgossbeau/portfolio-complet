@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, JSON, TIMESTAMP
+# models/publication.py
+from sqlalchemy import Column, Integer, String, ForeignKey, JSON, TIMESTAMP, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
@@ -17,8 +18,15 @@ class Publication(Base):
     # 🟢 OPTIONNELS
     journal = Column(String(300))
     doi = Column(String(100))
+    description = Column(Text, nullable=True)
+
+    image = Column(String(500), nullable=True)
+    link = Column(String(500), nullable=True)
 
     created_at = Column(TIMESTAMP, server_default=func.now())
+
+    # 👇 NOUVELLE COLONNE POUR LES VUES
+    views = Column(Integer, default=0)
 
     # ======================
     # RELATIONS
@@ -28,5 +36,22 @@ class Publication(Base):
     comments = relationship(
         "Comment",
         back_populates="publication",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        passive_deletes=True   # ✅ AJOUTÉ
+    )
+
+    # 👇 RELATION POUR LES LIKES
+    likes = relationship(
+        "Like",
+        back_populates="publication",
+        cascade="all, delete-orphan",
+        passive_deletes=True   # ✅ AJOUTÉ
+    )
+
+    # 👇 RELATION POUR LES FAVORIS
+    favorites = relationship(
+        "Favorite",
+        back_populates="publication",
+        cascade="all, delete-orphan",
+        passive_deletes=True   # ✅ AJOUTÉ
     )

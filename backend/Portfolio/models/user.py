@@ -45,5 +45,19 @@ class User(Base):
         cascade="all, delete-orphan"
     )
 
+    # 👇 RELATION POUR LES LIKES
+    likes = relationship(
+        "Like",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    # 👇 RELATION POUR LES FAVORIS
+    favorites = relationship(
+        "Favorite",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"

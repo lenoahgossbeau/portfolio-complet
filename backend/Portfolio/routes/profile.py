@@ -24,8 +24,15 @@ class ProfileOut(BaseModel):
     user_id: int
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+
+    gender: Optional[str] = None
     grade: Optional[str] = None
+    specialite: Optional[str] = None
+    diplome: Optional[str] = None
+
+    description: Optional[str] = None
     bio: Optional[str] = None
+
     avatar: Optional[str] = None
     email: Optional[str] = None
     linkedin: Optional[str] = None
@@ -36,8 +43,15 @@ class ProfileOut(BaseModel):
 class ProfileUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+
+    gender: Optional[str] = None
     grade: Optional[str] = None
+    specialite: Optional[str] = None
+    diplome: Optional[str] = None
+
+    description: Optional[str] = None
     bio: Optional[str] = None
+
     avatar: Optional[str] = None
     email: Optional[str] = None
     linkedin: Optional[str] = None
@@ -48,8 +62,15 @@ class ProfileUpdate(BaseModel):
 class ProfileCreate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+
+    gender: Optional[str] = None
     grade: Optional[str] = None
+    specialite: Optional[str] = None
+    diplome: Optional[str] = None
+
+    description: Optional[str] = None
     bio: Optional[str] = None
+
     avatar: Optional[str] = None
     email: Optional[str] = None
     linkedin: Optional[str] = None
@@ -108,8 +129,12 @@ def create_profile(profile: ProfileCreate, db: Session = Depends(get_db), curren
         user_id=current_user.id,
         first_name=profile.first_name,
         last_name=profile.last_name,
+        gender=profile.gender,
         grade=profile.grade,
-        description=profile.bio,
+        specialite=profile.specialite,
+        diplome=profile.diplome,
+        description=profile.description,
+        bio=profile.bio,
         profile_picture=profile.avatar,
         email=profile.email,
         linkedin=profile.linkedin,
@@ -134,8 +159,12 @@ def create_profile(profile: ProfileCreate, db: Session = Depends(get_db), curren
         "user_id": new_profile.user_id,
         "first_name": new_profile.first_name,
         "last_name": new_profile.last_name,
+        "gender": new_profile.gender,
         "grade": new_profile.grade,
-        "bio": new_profile.description,
+        "specialite": new_profile.specialite,
+        "diplome": new_profile.diplome,
+        "description": new_profile.description,
+        "bio": new_profile.bio,
         "avatar": new_profile.profile_picture,
         "email": new_profile.email,
         "linkedin": new_profile.linkedin,
@@ -158,8 +187,12 @@ def get_my_profile(
         "user_id": profile.user_id,
         "first_name": profile.first_name,
         "last_name": profile.last_name,
+        "gender": profile.gender,
         "grade": profile.grade,
-        "bio": profile.description,
+        "specialite": profile.specialite,
+        "diplome": profile.diplome,
+        "description": profile.description,
+        "bio": profile.bio,
         "avatar": profile.profile_picture,
         "email": profile.email,
         "linkedin": profile.linkedin,
@@ -201,8 +234,12 @@ def get_profile(
         "user_id": profile.user_id,
         "first_name": profile.first_name,
         "last_name": profile.last_name,
+        "gender": profile.gender,
         "grade": profile.grade,
-        "bio": profile.description,
+        "specialite": profile.specialite,
+        "diplome": profile.diplome,
+        "description": profile.description,
+        "bio": profile.bio,
         "avatar": profile.profile_picture,
         "email": profile.email,
         "linkedin": profile.linkedin,
@@ -226,10 +263,18 @@ def update_my_profile(
         profile.first_name = data.first_name
     if data.last_name is not None:
         profile.last_name = data.last_name
+    if data.gender is not None:
+        profile.gender = data.gender
     if data.grade is not None:
         profile.grade = data.grade
+    if data.specialite is not None:
+        profile.specialite = data.specialite
+    if data.diplome is not None:
+        profile.diplome = data.diplome
+    if data.description is not None:
+        profile.description = data.description
     if data.bio is not None:
-        profile.description = data.bio
+        profile.bio = data.bio
     if data.avatar is not None:
         profile.profile_picture = data.avatar
     if data.email is not None:
@@ -259,8 +304,12 @@ def update_my_profile(
         "user_id": profile.user_id,
         "first_name": profile.first_name,
         "last_name": profile.last_name,
+        "gender": profile.gender,
         "grade": profile.grade,
-        "bio": profile.description,
+        "specialite": profile.specialite,
+        "diplome": profile.diplome,
+        "description": profile.description,
+        "bio": profile.bio,
         "avatar": profile.profile_picture,
         "email": profile.email,
         "linkedin": profile.linkedin,
@@ -289,10 +338,18 @@ def update_profile(
         profile.first_name = data.first_name
     if data.last_name is not None:
         profile.last_name = data.last_name
+    if data.gender is not None:
+        profile.gender = data.gender
     if data.grade is not None:
         profile.grade = data.grade
+    if data.specialite is not None:
+        profile.specialite = data.specialite
+    if data.diplome is not None:
+        profile.diplome = data.diplome
+    if data.description is not None:
+        profile.description = data.description
     if data.bio is not None:
-        profile.description = data.bio
+        profile.bio = data.bio
     if data.avatar is not None:
         profile.profile_picture = data.avatar
     if data.email is not None:
@@ -314,8 +371,12 @@ def update_profile(
         "user_id": profile.user_id,
         "first_name": profile.first_name,
         "last_name": profile.last_name,
+        "gender": profile.gender,
         "grade": profile.grade,
-        "bio": profile.description,
+        "specialite": profile.specialite,
+        "diplome": profile.diplome,
+        "description": profile.description,
+        "bio": profile.bio,
         "avatar": profile.profile_picture,
         "email": profile.email,
         "linkedin": profile.linkedin,

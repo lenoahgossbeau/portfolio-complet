@@ -10,6 +10,7 @@ router = APIRouter(prefix="/admin/users", tags=["Admin Activation"])
 
 class EmailRequest(BaseModel):
     email: str
+    language: str = "fr"
 
 @router.post("/activation-link")
 def get_activation_link(payload: EmailRequest, db: Session = Depends(get_db)):
@@ -21,7 +22,12 @@ def get_activation_link(payload: EmailRequest, db: Session = Depends(get_db)):
     link = f"http://localhost:3000/auth/activate?token={token}"
     
     # Utilisation de Brevo (au lieu de Resend)
-    email_sent = send_activation_email_brevo(payload.email, link, getattr(user, 'first_name', ''))
+    email_sent = send_activation_email_brevo(
+        payload.email,
+        link,
+        getattr(user, 'first_name', ''),
+        payload.language
+    )
     
     return {
         "activation_link": link,

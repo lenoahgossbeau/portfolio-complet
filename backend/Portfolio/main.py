@@ -68,6 +68,11 @@ try:
     from routes.user import router as user_router
     from routes.profile import router as profile_router
     from routes.publication import router as publication_router
+    from routes.like import router as like_router       # 👈 AJOUTÉ
+    from routes.favorite import router as favorite_router
+    from routes.statistics import router as statistics_router
+    from routes.admin_statistics import router as admin_statistics_router
+    from routes.researcher_dashboard import router as researcher_dashboard_router
     from routes.contact import router as contact_router
     from auth.router import router as auth_router
     from routes.admin import admin_router
@@ -261,6 +266,11 @@ try:
     app.include_router(user_router, prefix="/users", tags=["Users"])
     app.include_router(profile_router, tags=["Profiles"])
     app.include_router(publication_router, prefix="/publications", tags=["Publications"])
+    app.include_router(like_router)                        # 👈 AJOUTÉ
+    app.include_router(favorite_router)
+    app.include_router(statistics_router)
+    app.include_router(admin_statistics_router)
+    app.include_router(researcher_dashboard_router)
     app.include_router(project_router, prefix="/projects", tags=["Projects"])
     app.include_router(admin_router)
     app.include_router(admin_users_router, tags=["Admin Users"])
@@ -746,7 +756,12 @@ try:
         ctx = base_context(request, current_user)
         ctx["publications"] = publications
         ctx["page_title"] = ctx["t"]["publications_title"]
-        return templates.TemplateResponse("publications.html", ctx)
+
+        return templates.TemplateResponse(
+            request=request,
+            name="publications.html",
+            context=ctx,
+        )
 
     # ===================== DISTINCTIONS =====================
     @app.get("/distinctions", response_class=HTMLResponse)

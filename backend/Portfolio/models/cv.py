@@ -10,9 +10,11 @@ class TechnicalSkill(Base):
 
 class SoftSkill(Base):
     __tablename__ = "soft_skills"
+
     id = Column(Integer, primary_key=True)
     profile_id = Column(Integer, ForeignKey("profiles.id"))
     skill_name = Column(String(100), nullable=False)
+    level = Column(Integer, nullable=False, default=50)
 
 class Degree(Base):
     __tablename__ = "degrees"

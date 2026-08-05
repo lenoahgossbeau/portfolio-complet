@@ -25,6 +25,7 @@ class TechnicalSkillCreate(BaseModel):
 
 class SoftSkillCreate(BaseModel):
     name: str
+    level: int
 
 class LanguageCreate(BaseModel):
     name: str
@@ -77,11 +78,14 @@ def upload_cv(
     
     # Mettre à jour le profil avec le chemin du CV
     profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+
     if not profile:
         raise HTTPException(status_code=404, detail="Profil non trouvé")
     
     profile.cv_url = f"/uploads/cv/{filename}"
+    
     db.commit()
+    db.refresh(profile)
     
     return {
         "success": True,
@@ -121,18 +125,41 @@ def delete_cv(
 
 # ==================== GET /me ====================
 @router.get("/me")
-def get_my_cv(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+def get_my_cv(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    profile = db.query(Profile).filter(
+        Profile.user_id == current_user.id
+    ).first()
+
     if not profile:
-        raise HTTPException(status_code=404, detail="Profil non trouvé")
+        raise HTTPException(
+            status_code=404,
+            detail="Profil non trouvé"
+        )
     
     profile_id = profile.id
     
     tech_result = db.execute(text("SELECT id, skill_name, level FROM technical_skills WHERE profile_id = :pid"), {"pid": profile_id})
     technical_skills = [{"id": row[0], "name": row[1], "level": row[2]} for row in tech_result]
     
-    soft_result = db.execute(text("SELECT id, skill_name FROM soft_skills WHERE profile_id = :pid"), {"pid": profile_id})
-    soft_skills = [{"id": row[0], "name": row[1], "level": 50} for row in soft_result]
+    soft_result = db.execute(
+        text("""
+            SELECT id, skill_name, level
+            FROM soft_skills
+            WHERE profile_id = :pid
+        """),
+        {"pid": profile_id}
+    )
+    soft_skills = [
+        {
+            "id": row[0],
+            "name": row[1],
+            "level": row[2]
+        }
+        for row in soft_result
+    ]
     
     lang_result = db.execute(text("SELECT id, language, level FROM languages WHERE profile_id = :pid"), {"pid": profile_id})
     languages = [{"id": row[0], "name": row[1], "level": row[2], "percent": 50} for row in lang_result]
@@ -148,7 +175,8 @@ def get_my_cv(db: Session = Depends(get_db), current_user: User = Depends(get_cu
         "soft_skills": soft_skills,
         "languages": languages,
         "degrees": degrees,
-        "experiences": experiences
+        "experiences": experiences,
+        "cv_url": profile.cv_url
     }
 
 # ==================== TECHNICAL SKILLS CRUD ====================
@@ -186,15 +214,78 @@ def delete_technical_skill(skill_id: int, db: Session = Depends(get_db), current
 
 # ==================== SOFT SKILLS CRUD ====================
 @router.post("/soft-skills")
-def add_soft_skill(skill: SoftSkillCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+def add_soft_skill(
+    skill: SoftSkillCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    profile = db.query(Profile).filter(
+        Profile.user_id == current_user.id
+    ).first()
+
     if not profile:
-        raise HTTPException(status_code=404, detail="Profil non trouvé")
-    
-    db.execute(text("INSERT INTO soft_skills (profile_id, skill_name) VALUES (:pid, :name)"), 
-               {"pid": profile.id, "name": skill.name})
+        raise HTTPException(
+            status_code=404,
+            detail="Profil non trouvé"
+        )
+
+    db.execute(
+        text("""
+            INSERT INTO soft_skills
+            (profile_id, skill_name, level)
+            VALUES (:pid, :name, :level)
+        """),
+        {
+            "pid": profile.id,
+            "name": skill.name,
+            "level": skill.level
+        }
+    )
+
     db.commit()
-    return {"message": "Soft skill ajoutée"}
+
+    return {
+        "message": "Soft skill ajoutée"
+    }
+
+@router.put("/soft-skills/{skill_id}")
+def update_soft_skill(
+    skill_id: int,
+    skill: SoftSkillCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    profile = db.query(Profile).filter(
+        Profile.user_id == current_user.id
+    ).first()
+
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail="Profil non trouvé"
+        )
+
+    db.execute(
+        text("""
+            UPDATE soft_skills
+            SET skill_name = :name,
+                level = :level
+            WHERE id = :sid
+              AND profile_id = :pid
+        """),
+        {
+            "name": skill.name,
+            "level": skill.level,
+            "sid": skill_id,
+            "pid": profile.id
+        }
+    )
+
+    db.commit()
+
+    return {
+        "message": "Soft skill mise à jour"
+    }
 
 @router.delete("/soft-skills/{skill_id}")
 def delete_soft_skill(skill_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -355,15 +446,19 @@ def view_cv(
             detail="Fichier introuvable"
         )
 
+    # Lire le fichier et le renvoyer avec les bons headers pour l'affichage
     with open(file_path, "rb") as pdf:
-        pdf_bytes = pdf.read()
+        pdf_content = pdf.read()
 
     return Response(
-        content=pdf_bytes,
+        content=pdf_content,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": "inline; filename=cv.pdf",
-            "Cache-Control": "no-cache",
+            "Content-Disposition": "inline; filename=\"CV.pdf\"",
+            "Content-Type": "application/pdf",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
             "X-Content-Type-Options": "nosniff"
         }
     )

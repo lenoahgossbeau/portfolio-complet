@@ -7,7 +7,6 @@ import csv
 import json
 import os
 import shutil
-import requests
 import bcrypt
 from datetime import datetime, timezone
 
@@ -15,7 +14,17 @@ from database import get_db
 from models.user import User
 from models.audit import Audit
 from models.profile import Profile
-from auth.jwt import get_current_user, create_activation_token
+from services.researcher_import import ResearcherImporter
+from models.cv import (
+    TechnicalSkill,
+    SoftSkill,
+    Degree,
+    Experience,
+    Language
+)
+from models.publication import Publication
+from models.project import Project
+from auth.jwt import get_current_user
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -131,6 +140,7 @@ def create_user(
     db.commit()
 
     if not is_admin_role:
+        from auth.jwt import create_activation_token
         token = create_activation_token(new_user.email)
         activation_link = f"http://localhost:3000/auth/activate?token={token}"
         print(f"\n🔗 LIEN D'ACTIVATION POUR {new_user.email} :\n{activation_link}\n")
@@ -446,11 +456,37 @@ def delete_user(
 @admin_users_router.post("/{user_id}/import-content")
 def import_content(
     user_id: int,
+
+    # Informations personnelles
+    first_name: str = Form(None),
+    last_name: str = Form(None),
+    gender: str = Form(None),
+    grade: str = Form(None),
+    specialite: str = Form(None),
+    diplome: str = Form(None),
+
+    # Présentation
+    description: str = Form(None),
     bio: str = Form(None),
+
+    # Contacts
+    email: str = Form(None),
+    linkedin: str = Form(None),
+    whatsapp: str = Form(None),
+    twitter: str = Form(None),
+    github: str = Form(None),
+
+    # Fichiers
     cv: UploadFile = File(None),
     photo: UploadFile = File(None),
     publications: UploadFile = File(None),
     projects: UploadFile = File(None),
+    technical_skills: UploadFile = File(None),
+    soft_skills: UploadFile = File(None),
+    languages: UploadFile = File(None),
+    degrees: UploadFile = File(None),
+    experiences: UploadFile = File(None),
+
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -468,10 +504,38 @@ def import_content(
     if not profile:
         profile = Profile(user_id=user.id)
         db.add(profile)
+        db.flush()
+
+    importer = ResearcherImporter(db)
     
-    if bio:
-        profile.bio = bio
+    # ==================== PROFIL ====================
+    profile_data = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "gender": gender,
+        "grade": grade,
+        "specialite": specialite,
+        "diplome": diplome,
+        "description": description,
+        "bio": bio,
+        "email": email,
+        "linkedin": linkedin,
+        "whatsapp": whatsapp,
+        "twitter": twitter,
+        "github": github,
+    }
+
+    # On enlève les champs non renseignés
+    profile_data = {
+        key: value
+        for key, value in profile_data.items()
+        if value not in (None, "")
+    }
+
+    if profile_data:
+        importer.update_profile(profile, profile_data)
     
+    # ==================== CV ====================
     if cv:
         cv_dir = "uploads/cv"
         os.makedirs(cv_dir, exist_ok=True)
@@ -479,8 +543,13 @@ def import_content(
         cv_path = os.path.join(cv_dir, cv_filename)
         with open(cv_path, "wb") as buffer:
             shutil.copyfileobj(cv.file, buffer)
-        profile.cv_url = f"/{cv_path}"
+        importer.update_profile(
+            profile,
+            {},
+            cv_url=f"/{cv_path}"
+        )
     
+    # ==================== PHOTO ====================
     if photo:
         photo_dir = "uploads/photos"
         os.makedirs(photo_dir, exist_ok=True)
@@ -488,54 +557,111 @@ def import_content(
         photo_path = os.path.join(photo_dir, photo_filename)
         with open(photo_path, "wb") as buffer:
             shutil.copyfileobj(photo.file, buffer)
-        profile.avatar = f"/{photo_path}"
+        importer.update_profile(
+            profile,
+            {},
+            profile_picture=f"/{photo_path}"
+        )
     
+    # ==================== PUBLICATIONS ====================
     if publications:
         try:
             data = json.load(publications.file)
-            token = create_activation_token(current_user.email)
-            for item in data:
-                pub_data = {
-                    "title": item.get("title", ""),
-                    "year": int(item.get("date", "2024")[:4]) if item.get("date") else 2024,
-                    "description": item.get("description", ""),
-                    "coauthors": item.get("coauthors", [])
-                }
-                response = requests.post(
-                    "http://localhost:8000/publications/",
-                    json=pub_data,
-                    headers={"Authorization": f"Bearer {token}"}
-                )
+            importer.clear_publications(profile.id)
+            importer.import_publications(profile.id, data)
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Erreur publication JSON: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erreur import publications: {str(e)}"
+            )
     
+    # ==================== PROJETS ====================
     if projects:
         try:
             data = json.load(projects.file)
-            token = create_activation_token(current_user.email)
-            for item in data:
-                proj_data = {
-                    "title": item.get("title", ""),
-                    "year": int(item.get("date", "2024")[:4]) if item.get("date") else 2024,
-                    "description": item.get("description", ""),
-                    "coauthor": item.get("coauthors", [])
-                }
-                response = requests.post(
-                    "http://localhost:8000/projects/",
-                    json=proj_data,
-                    headers={"Authorization": f"Bearer {token}"}
-                )
+            importer.clear_projects(profile.id)
+            importer.import_projects(profile.id, data)
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Erreur projet JSON: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erreur import projets: {str(e)}"
+            )
     
-    db.commit()
+    # ==================== TECHNICAL SKILLS ====================
+    if technical_skills:
+        try:
+            data = json.load(technical_skills.file)
+            importer.clear_technical_skills(profile.id)
+            importer.import_technical_skills(profile.id, data)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erreur import compétences techniques: {str(e)}"
+            )
+    
+    # ==================== SOFT SKILLS ====================
+    if soft_skills:
+        try:
+            data = json.load(soft_skills.file)
+            importer.clear_soft_skills(profile.id)
+            importer.import_soft_skills(profile.id, data)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erreur import soft skills: {str(e)}"
+            )
+    
+    # ==================== LANGUES ====================
+    if languages:
+        try:
+            data = json.load(languages.file)
+            importer.clear_languages(profile.id)
+            importer.import_languages(profile.id, data)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erreur import langues: {str(e)}"
+            )
+    
+    # ==================== DEGRES ====================
+    if degrees:
+        try:
+            data = json.load(degrees.file)
+            importer.clear_degrees(profile.id)
+            importer.import_degrees(profile.id, data)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erreur import diplômes: {str(e)}"
+            )
+    
+    # ==================== EXPERIENCES ====================
+    if experiences:
+        try:
+            data = json.load(experiences.file)
+            importer.clear_experiences(profile.id)
+            importer.import_experiences(profile.id, data)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erreur import expériences: {str(e)}"
+            )
+    
+    importer.save()
     
     return {
         "message": "Contenu importé avec succès",
         "user_id": user.id,
         "bio_updated": bool(bio),
         "cv_uploaded": cv is not None,
-        "photo_uploaded": photo is not None
+        "photo_uploaded": photo is not None,
+        "technical_skills_imported": technical_skills is not None,
+        "soft_skills_imported": soft_skills is not None,
+        "languages_imported": languages is not None,
+        "degrees_imported": degrees is not None,
+        "experiences_imported": experiences is not None,
+        "publications_imported": publications is not None,
+        "projects_imported": projects is not None
     }
 
 # ======================
