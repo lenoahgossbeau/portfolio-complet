@@ -7,10 +7,19 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { t } from "@/locales/translations";
 
 type Profile = {
-  name: string;
-  profession: string;
-  about: string;
+  first_name: string;
+  last_name: string;
+
+  gender: string;
+  grade: string;
+  specialite: string;
+  diplome: string;
+
+  description: string;
+  bio: string;
+
   avatar: string;
+
   email: string;
   linkedin: string;
   whatsapp: string;

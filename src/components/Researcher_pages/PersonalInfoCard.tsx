@@ -11,10 +11,19 @@ import SecurityCard from "./SecurityCard";
 import toast from "react-hot-toast";
 
 type Profile = {
-  name: string;
-  profession: string;
-  about: string;
+  first_name: string;
+  last_name: string;
+
+  gender: string;
+  grade: string;
+  specialite: string;
+  diplome: string;
+
+  description: string;
+  bio: string;
+
   avatar: string;
+
   email: string;
   linkedin: string;
   whatsapp: string;
@@ -58,9 +67,14 @@ export default function PersonalInfoCard({
       const data = await response.json();
 
       setProfile({
-        name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
-        profession: data.grade || "",
-        about: data.bio || "",
+        first_name: data.first_name || "",
+        last_name: data.last_name || "",
+        gender: data.gender || "",
+        grade: data.grade || "",
+        specialite: data.specialite || "",
+        diplome: data.diplome || "",
+        description: data.description || "",
+        bio: data.bio || "",
         avatar: data.avatar || "",
         email: data.email || "",
         linkedin: data.linkedin || "",
@@ -91,9 +105,14 @@ export default function PersonalInfoCard({
       const data = await response.json();
 
       setProfile({
-        name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
-        profession: data.grade || "",
-        about: data.bio || "",
+        first_name: data.first_name || "",
+        last_name: data.last_name || "",
+        gender: data.gender || "",
+        grade: data.grade || "",
+        specialite: data.specialite || "",
+        diplome: data.diplome || "",
+        description: data.description || "",
+        bio: data.bio || "",
         avatar: data.avatar || "",
         email: data.email || "",
         linkedin: data.linkedin || "",
@@ -108,20 +127,20 @@ export default function PersonalInfoCard({
 
   const handleSave = async (updatedProfile: Profile) => {
     try {
-      const nameParts = updatedProfile.name.trim().split(/\s+/);
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ");
-
       const response = await fetchWithAuth(getProfileEndpoint(), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-          grade: updatedProfile.profession,
-          bio: updatedProfile.about,
+          first_name: updatedProfile.first_name,
+          last_name: updatedProfile.last_name,
+          gender: updatedProfile.gender,
+          grade: updatedProfile.grade,
+          specialite: updatedProfile.specialite,
+          diplome: updatedProfile.diplome,
+          description: updatedProfile.description,
+          bio: updatedProfile.bio,
           avatar: updatedProfile.avatar,
           email: updatedProfile.email,
           linkedin: updatedProfile.linkedin,
@@ -159,6 +178,8 @@ export default function PersonalInfoCard({
       </div>
     );
   }
+
+  const fullName = `${profile.first_name} ${profile.last_name}`.trim() || t("no_name", language);
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-10 py-6">
@@ -212,27 +233,58 @@ export default function PersonalInfoCard({
             </div>
 
             <div className="text-left w-full max-w-sm">
+
               <p className="font-medium mb-1">
                 {t("name", language)}:{" "}
-                <span className="font-normal text-md">
-                  {profile.name || t("no_name", language)}
+                <span className="font-normal">
+                  {fullName}
+                </span>
+              </p>
+
+              <p className="font-medium mb-1">
+                {t("gender", language)}:{" "}
+                <span className="font-normal">
+                  {profile.gender || "Non spécifié"}
                 </span>
               </p>
 
               <p className="font-medium mb-1">
                 {t("profession", language)}:{" "}
-                <span className="font-normal text-md">
-                  {profile.profession || t("no_profession", language)}
+                <span className="font-normal">
+                  {profile.grade || t("no_profession", language)}
                 </span>
               </p>
 
-              <p className="font-medium mt-2">
-                {t("about_you", language)}:
+              <p className="font-medium mb-1">
+                {t("specialite", language)}:{" "}
+                <span className="font-normal">
+                  {profile.specialite || "Non spécifiée"}
+                </span>
               </p>
 
-              <p className="text-sm text-gray-600 mt-1 leading-relaxed max-h-25 overflow-y-auto scrollbar-hide">
-                {profile.about || t("no_about", language)}
+              <p className="font-medium mb-1">
+                {t("diplome", language)}:{" "}
+                <span className="font-normal">
+                  {profile.diplome || "Non spécifié"}
+                </span>
               </p>
+
+              <p className="font-medium mt-3">
+                {t("description", language)}:
+              </p>
+
+              <p className="text-sm text-gray-600 mb-3">
+                {profile.description || "Aucune description"}
+              </p>
+
+              <p className="font-medium">
+                {t("bio", language)}:
+              </p>
+
+              <p className="text-sm text-gray-600 leading-relaxed max-h-28 overflow-y-auto scrollbar-hide">
+                {profile.bio || t("no_about", language)}
+              </p>
+
             </div>
           </div>
         </div>

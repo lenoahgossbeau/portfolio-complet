@@ -108,13 +108,30 @@ export default function Resume({ editable = true }: { editable?: boolean }) {
   // SKILLS
   const addSkill = async (isTechnical: boolean, name: string, level: number) => {
     const endpoint = isTechnical ? 'technical-skills' : 'soft-skills';
-    await apiCall('POST', endpoint, { name, level: isTechnical ? level : undefined });
+
+    await apiCall('POST', endpoint, {
+      name,
+      level
+    });
+
     await loadCV();
   };
 
-  const updateSkill = async (isTechnical: boolean, id: number, name: string, level: number) => {
-    const endpoint = isTechnical ? `technical-skills/${id}` : `soft-skills/${id}`;
-    await apiCall('PUT', endpoint, { name, level: isTechnical ? level : undefined });
+  const updateSkill = async (
+    isTechnical: boolean,
+    id: number,
+    name: string,
+    level: number
+  ) => {
+    const endpoint = isTechnical
+      ? `technical-skills/${id}`
+      : `soft-skills/${id}`;
+
+    await apiCall('PUT', endpoint, {
+      name,
+      level
+    });
+
     await loadCV();
   };
 
@@ -142,12 +159,22 @@ export default function Resume({ editable = true }: { editable?: boolean }) {
 
   // DEGREES
   const addDegree = async (title: string, institution: string, year: string, description: string) => {
-    await apiCall('POST', 'degrees', { title, institution, year, description });
+    await apiCall('POST', 'degrees', {
+      title,
+      institution,
+      year: String(year),
+      description
+    });
     await loadCV();
   };
 
   const updateDegree = async (id: number, title: string, institution: string, year: string, description: string) => {
-    await apiCall('PUT', `degrees/${id}`, { title, institution, year, description });
+    await apiCall('PUT', `degrees/${id}`, {
+      title,
+      institution,
+      year: String(year),
+      description
+    });
     await loadCV();
   };
 
@@ -235,7 +262,7 @@ export default function Resume({ editable = true }: { editable?: boolean }) {
     setEditingId(item.id);
     if (kind === "skill") {
       setForm({ 
-        isTechnical: true, 
+        isTechnical: item.isTechnical !== undefined ? item.isTechnical : true,
         name: item.name || "", 
         level: item.level || 50,
         institution: "",
@@ -443,7 +470,19 @@ export default function Resume({ editable = true }: { editable?: boolean }) {
                       <span>{skill.level}%</span>
                     </div>
                   </div>
-                  {editable && <button onClick={() => openEditForm("skill", skill)} className="ml-3 text-[#33557D]"><FiEdit2 /></button>}
+                  {editable && (
+                    <button 
+                      onClick={() =>
+                        openEditForm("skill", {
+                          ...skill,
+                          isTechnical: true
+                        })
+                      } 
+                      className="ml-3 text-[#33557D]"
+                    >
+                      <FiEdit2 />
+                    </button>
+                  )}
                 </div>
               ))}
               <h4 className="text-[#33557D] mt-6 mb-3">{t('soft_skills', language)}</h4>
@@ -451,7 +490,19 @@ export default function Resume({ editable = true }: { editable?: boolean }) {
                 <div key={skill.id} className="ml-4 mb-4 flex items-center">
                   {editable && <button onClick={() => deleteSkill(false, skill.id)} className="cursor-pointer mr-3 text-red-400"><FiX /></button>}
                   <div className="flex-1"><div className="flex justify-between items-center text-sm text-gray-600"><span>{skill.name}</span><div className="mx-4 w-full h-1 bg-gray-200 rounded"><div className="h-1 bg-blue-900 rounded" style={{ width: `${skill.level}%` }} /></div><span>{skill.level}%</span></div></div>
-                  {editable && <button onClick={() => openEditForm("skill", skill)} className="ml-3 text-[#33557D]"><FiEdit2 /></button>}
+                  {editable && (
+                    <button 
+                      onClick={() =>
+                        openEditForm("skill", {
+                          ...skill,
+                          isTechnical: false
+                        })
+                      } 
+                      className="ml-3 text-[#33557D]"
+                    >
+                      <FiEdit2 />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -777,7 +828,7 @@ export default function Resume({ editable = true }: { editable?: boolean }) {
                   </div>
                   <div>
                     <input
-                      type="text"
+                      type="date"
                       placeholder={t('start_date', language)}
                       className="w-full border-b border-gray-300 p-2 focus:outline-none focus:border-blue-500"
                       value={form.start_date || ""}
@@ -786,7 +837,7 @@ export default function Resume({ editable = true }: { editable?: boolean }) {
                   </div>
                   <div>
                     <input
-                      type="text"
+                      type="date"
                       placeholder={t('end_date', language)}
                       className="w-full border-b border-gray-300 p-2 focus:outline-none focus:border-blue-500"
                       value={form.end_date || ""}

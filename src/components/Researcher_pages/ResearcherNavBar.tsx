@@ -9,7 +9,7 @@ import { t } from '@/locales/translations';
 const sections = ["dashboard"];
 
 export default function Navbar({ admin = false }: { admin?: boolean }) {
-  const { language, changeLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   const [active, setActive] = useState("home");
   const [scrolled, setScrolled] = useState(false);
@@ -79,7 +79,7 @@ export default function Navbar({ admin = false }: { admin?: boolean }) {
   }, []);
 
   const handleLanguageChange = (lang: string) => {
-    changeLanguage(lang);
+    setLanguage(lang);
     setLangOpen(false);
   };
 
@@ -145,7 +145,7 @@ export default function Navbar({ admin = false }: { admin?: boolean }) {
             <TfiWorld className="text-[#5F5F5F]" />
 
             <span className="text-[#5F5F5F]">
-              {language}
+              {language.toUpperCase()}
             </span>
 
             <FaChevronDown className="text-xs text-[#5F5F5F]" />
@@ -153,14 +153,14 @@ export default function Navbar({ admin = false }: { admin?: boolean }) {
 
           {langOpen && (
             <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg overflow-hidden z-50">
-              {["EN", "FR"].map((lang) => (
+              {["en", "fr"].map((lang) => (
                 <button
                   type="button"
                   key={lang}
                   onClick={() => handleLanguageChange(lang)}
                   className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
                 >
-                  {lang}
+                  {lang.toUpperCase()}
                 </button>
               ))}
             </div>

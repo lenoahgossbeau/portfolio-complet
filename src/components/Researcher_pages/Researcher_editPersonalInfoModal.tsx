@@ -7,20 +7,48 @@ import { t } from "@/locales/translations";
 import { API_BASE_URL } from "@/lib/api";
 import toast from "react-hot-toast";
 
+type Profile = {
+  first_name: string;
+  last_name: string;
+
+  gender: string;
+  grade: string;
+  specialite: string;
+  diplome: string;
+
+  description: string;
+  bio: string;
+
+  avatar: string;
+
+  email: string;
+  linkedin: string;
+  whatsapp: string;
+  twitter: string;
+  github: string;
+};
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  data: Profile;
+  onSave: (profile: Profile) => Promise<void>;
+};
+
 export default function EditPersonalInfoModal({
   open,
   onClose,
   data,
   onSave,
-}: any) {
+}: Props) {
   const { language } = useLanguage();
 
-  const [form, setForm] = useState(data);
+  const [form, setForm] = useState<Profile>(data);
 
   const [errors, setErrors] = useState({
-    name: "",
-    profession: "",
-    about: "",
+    first_name: "",
+    last_name: "",
+    grade: "",
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -34,43 +62,49 @@ export default function EditPersonalInfoModal({
   }, [data]);
 
   const validate = () => {
-    const newErrors: {
-      name?: string;
-      profession?: string;
-      about?: string;
-    } = {};
+    const newErrors = {
+      first_name: "",
+      last_name: "",
+      grade: "",
+    };
 
-    if (!form?.name?.trim()) {
-      newErrors.name = t("name_required", language);
+    if (!form.first_name.trim()) {
+      newErrors.first_name = t("first_name_required", language);
     }
 
-    if (!form?.profession?.trim()) {
-      newErrors.profession = t("profession_required", language);
+    if (!form.last_name.trim()) {
+      newErrors.last_name = t("last_name_required", language);
     }
 
-    if (!form?.about?.trim()) {
-      newErrors.about = t("about_required", language);
+    if (!form.grade.trim()) {
+      newErrors.grade = t("grade_required", language);
     }
 
-    setErrors({
-      name: newErrors.name || "",
-      profession: newErrors.profession || "",
-      about: newErrors.about || "",
-    });
+    setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    return (
+      !newErrors.first_name &&
+      !newErrors.last_name &&
+      !newErrors.grade
+    );
   };
 
-  const update = (key: string, value: string) => {
-    setForm((prev: any) => ({
+  const update = (key: keyof Profile, value: string) => {
+    setForm((prev) => ({
       ...prev,
       [key]: value,
     }));
 
-    setErrors((prev) => ({
-      ...prev,
-      [key]: "",
-    }));
+    if (
+      key === "first_name" ||
+      key === "last_name" ||
+      key === "grade"
+    ) {
+      setErrors((prev) => ({
+        ...prev,
+        [key]: "",
+      }));
+    }
   };
 
   const handleImageChange = (
@@ -92,8 +126,9 @@ export default function EditPersonalInfoModal({
 
     setImageFile(file);
 
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
+    const preview = URL.createObjectURL(file);
+
+    setImagePreview(preview);
   };
 
   const uploadImage = async (
@@ -107,6 +142,7 @@ export default function EditPersonalInfoModal({
     }
 
     const formData = new FormData();
+
     formData.append("file", file);
 
     try {
@@ -128,13 +164,12 @@ export default function EditPersonalInfoModal({
       }
 
       toast.error(
-        result.detail ||
-          "Erreur lors du téléchargement de la photo"
+        result.detail ??
+          "Erreur lors du téléchargement"
       );
 
       return null;
-    } catch (error) {
-      console.error("Erreur upload photo :", error);
+    } catch {
       toast.error("Erreur réseau");
       return null;
     }
@@ -149,27 +184,24 @@ export default function EditPersonalInfoModal({
       let avatarUrl = form.avatar;
 
       if (imageFile) {
-        const uploadedUrl = await uploadImage(imageFile);
+        const uploaded = await uploadImage(imageFile);
 
-        if (!uploadedUrl) {
+        if (!uploaded) {
+          setUploading(false);
           return;
         }
 
-        avatarUrl = uploadedUrl;
-        setImagePreview(uploadedUrl);
+        avatarUrl = uploaded;
       }
 
-      const updatedProfile = {
+      await onSave({
         ...form,
         avatar: avatarUrl,
-      };
+      });
 
-      await onSave(updatedProfile);
-
-      setImageFile(null);
       onClose();
     } catch (error) {
-      console.error("Erreur sauvegarde profil :", error);
+      console.error(error);
       toast.error("Erreur lors de la sauvegarde");
     } finally {
       setUploading(false);
@@ -208,9 +240,8 @@ export default function EditPersonalInfoModal({
       <div className="flex justify-center mb-6">
         <label className="cursor-pointer">
           <img
-            key={imagePreview || "default"}
             src={imagePreview || "/favicon.ico"}
-            className="w-48 h-48 rounded-full object-cover border-2 border-gray-200"
+            className="w-44 h-44 rounded-full object-cover border-2 border-gray-200"
             alt="Profile"
             onError={(e) => {
               e.currentTarget.src = "/favicon.ico";
@@ -224,7 +255,7 @@ export default function EditPersonalInfoModal({
             className="hidden"
           />
 
-          <p className="text-center text-xs text-gray-500 mt-1">
+          <p className="text-center text-xs text-gray-500 mt-2">
             {language === "fr"
               ? "Cliquez pour changer la photo"
               : "Click to change photo"}
@@ -232,65 +263,170 @@ export default function EditPersonalInfoModal({
         </label>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+
         <div>
+          <label className="text-sm font-medium">
+            {t("first_name", language)}
+          </label>
+
           <input
-            placeholder={t("name", language)}
-            value={form.name || ""}
+            className="w-full border rounded-lg p-2"
+            value={form.first_name}
             onChange={(e) =>
-              update("name", e.target.value)
+              update("first_name", e.target.value)
             }
-            className={`w-full border-b focus:border-blue-600 outline-none ${
-              errors.name ? "border-red-600" : ""
-            }`}
           />
 
-          {errors.name && (
+          {errors.first_name && (
             <p className="text-red-500 text-sm">
-              {errors.name}
+              {errors.first_name}
             </p>
           )}
         </div>
 
         <div>
+          <label className="text-sm font-medium">
+            {t("last_name", language)}
+          </label>
+
           <input
-            placeholder={t("profession", language)}
-            value={form.profession || ""}
+            className="w-full border rounded-lg p-2"
+            value={form.last_name}
             onChange={(e) =>
-              update("profession", e.target.value)
+              update("last_name", e.target.value)
             }
-            className={`w-full border-b focus:border-blue-600 outline-none ${
-              errors.profession ? "border-red-600" : ""
-            }`}
           />
 
-          {errors.profession && (
+          {errors.last_name && (
             <p className="text-red-500 text-sm">
-              {errors.profession}
+              {errors.last_name}
             </p>
           )}
         </div>
 
         <div>
-          <textarea
-            placeholder={t("about_you", language)}
-            value={form.about || ""}
+          <label className="text-sm font-medium">
+            {t("gender", language)}
+          </label>
+
+          <select
+            className="w-full border rounded-lg p-2"
+            value={form.gender}
             onChange={(e) =>
-              update("about", e.target.value)
+              update("gender", e.target.value)
             }
-            className={`w-full border rounded-lg p-2 resize-none focus:border-blue-600 outline-none ${
-              errors.about ? "border-red-600" : ""
-            }`}
-            rows={4}
+          >
+            <option value="">
+              {language === "fr"
+                ? "Sélectionner"
+                : "Select"}
+            </option>
+
+            <option value="Male">
+              {language === "fr"
+                ? "Homme"
+                : "Male"}
+            </option>
+
+            <option value="Female">
+              {language === "fr"
+                ? "Femme"
+                : "Female"}
+            </option>
+
+            <option value="Other">
+              {language === "fr"
+                ? "Autre"
+                : "Other"}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">
+            {t("grade", language)}
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-2"
+            value={form.grade}
+            onChange={(e) =>
+              update("grade", e.target.value)
+            }
           />
 
-          {errors.about && (
+          {errors.grade && (
             <p className="text-red-500 text-sm">
-              {errors.about}
+              {errors.grade}
             </p>
           )}
         </div>
+
+        <div>
+          <label className="text-sm font-medium">
+            {t("specialite", language)}
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-2"
+            value={form.specialite}
+            onChange={(e) =>
+              update("specialite", e.target.value)
+            }
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">
+            {t("diplome", language)}
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-2"
+            value={form.diplome}
+            onChange={(e) =>
+              update("diplome", e.target.value)
+            }
+          />
+        </div>
+
       </div>
+
+      <div className="mt-5">
+
+        <label className="text-sm font-medium">
+          {t("description", language)}
+        </label>
+
+        <textarea
+          rows={3}
+          className="w-full border rounded-lg p-2"
+          value={form.description}
+          onChange={(e) =>
+            update("description", e.target.value)
+          }
+        />
+
+      </div>
+
+      <div className="mt-5">
+
+        <label className="text-sm font-medium">
+          {t("bio", language)}
+        </label>
+
+        <textarea
+          rows={6}
+          className="w-full border rounded-lg p-2"
+          value={form.bio}
+          onChange={(e) =>
+            update("bio", e.target.value)
+          }
+        />
+
+      </div>
+
     </Modal>
   );
 }

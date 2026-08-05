@@ -22,7 +22,7 @@ function ActivateContent() {
   useEffect(() => {
     if (!token) {
       setStatus('error');
-      setMessage(language === 'fr' ? 'Token d\'activation manquant' : 'Missing activation token');
+      setMessage(t("activation_token_missing", language));
       return;
     }
 
@@ -33,18 +33,18 @@ function ActivateContent() {
 
         if (response.ok) {
           setStatus('success');
-          setMessage(language === 'fr' ? 'Votre compte a été activé avec succès !' : 'Your account has been activated successfully!');
+          setMessage(t("account_activated_successfully", language));
           // Rediriger vers la page de connexion après 3 secondes
           setTimeout(() => {
             router.push('/auth/login');
           }, 3000);
         } else {
           setStatus('error');
-          setMessage(data.detail || (language === 'fr' ? 'Erreur lors de l\'activation du compte' : 'Error activating account'));
+          setMessage(data.detail || t("account_activation_error", language));
         }
       } catch (error) {
         setStatus('error');
-        setMessage(language === 'fr' ? 'Erreur réseau. Veuillez réessayer.' : 'Network error. Please try again.');
+        setMessage(t("network_error", language));
       }
     };
 
@@ -58,22 +58,22 @@ function ActivateContent() {
         {status === 'loading' && (
           <>
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <h2 className="text-2xl font-bold mb-2">{language === 'fr' ? 'Activation en cours...' : 'Activating...'}</h2>
-            <p className="text-gray-600">{language === 'fr' ? 'Veuillez patienter...' : 'Please wait...'}</p>
+            <h2 className="text-2xl font-bold mb-2">{t("activation_in_progress", language)}</h2>
+            <p className="text-gray-600">{t("please_wait", language)}</p>
           </>
         )}
 
         {status === 'success' && (
           <>
             <div className="text-green-500 text-6xl mb-4">✓</div>
-            <h2 className="text-2xl font-bold text-green-600 mb-2">{language === 'fr' ? 'Compte activé !' : 'Account Activated!'}</h2>
+            <h2 className="text-2xl font-bold text-green-600 mb-2">{t("account_activated", language)}</h2>
             <p className="text-gray-600 mb-6">{message}</p>
-            <p className="text-sm text-gray-500">{language === 'fr' ? 'Redirection vers la connexion...' : 'Redirecting to login...'}</p>
+            <p className="text-sm text-gray-500">{t("redirecting_to_login", language)}</p>
             <Link
               href="/auth/login"
               className="inline-block mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
             >
-              {language === 'fr' ? 'Se connecter maintenant' : 'Login now'}
+              {t("login_now", language)}
             </Link>
           </>
         )}
@@ -81,17 +81,30 @@ function ActivateContent() {
         {status === 'error' && (
           <>
             <div className="text-red-500 text-6xl mb-4">✗</div>
-            <h2 className="text-2xl font-bold text-red-600 mb-2">{language === 'fr' ? 'Erreur d\'activation' : 'Activation Error'}</h2>
+            <h2 className="text-2xl font-bold text-red-600 mb-2">{t("activation_error", language)}</h2>
             <p className="text-gray-600 mb-6">{message}</p>
             <Link
               href="/auth/register"
               className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
             >
-              {language === 'fr' ? 'Créer un compte' : 'Create an account'}
+              {t("create_account", language)}
             </Link>
           </>
         )}
         
+      </div>
+    </div>
+  );
+}
+
+// Composant de chargement pour Suspense (sans useLanguage)
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <h2 className="text-2xl font-bold mb-2">Chargement...</h2>
+        <p className="text-gray-600">Veuillez patienter...</p>
       </div>
     </div>
   );
@@ -102,15 +115,7 @@ export default function ActivatePage() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <h2 className="text-2xl font-bold mb-2">Chargement...</h2>
-            <p className="text-gray-600">Veuillez patienter...</p>
-          </div>
-        </div>
-      }>
+      <Suspense fallback={<LoadingFallback />}>
         <ActivateContent />
       </Suspense>
     </>

@@ -120,6 +120,34 @@ export const translations: Translations = {
     fr: 'Format attendu : [{"title": "...", "date": "...", "description": "...", "link": "..."}]',
     en: 'Expected format: [{"title": "...", "date": "...", "description": "...", "link": "..."}]'
   },
+  'technical_skills_format': {
+    fr: 'Format attendu : [{"name": "...", "level": "..."}]',
+    en: 'Expected format: [{"name": "...", "level": "..."}]'
+  },
+  'soft_skills_format': {
+    fr: 'Format attendu : [{"name": "...", "level": "..."}]',
+    en: 'Expected format: [{"name": "...", "level": "..."}]'
+  },
+  'languages_format': {
+    fr: 'Format attendu : [{"name": "...", "level": "..."}]',
+    en: 'Expected format: [{"name": "...", "level": "..."}]'
+  },
+  'degrees': {
+    fr: 'Diplômes',
+    en: 'Degrees'
+  },
+  'degrees_format': {
+    fr: 'Format attendu : [{"title": "...", "institution": "...", "year": 2024}]',
+    en: 'Expected format: [{"title": "...", "institution": "...", "year": 2024}]'
+  },
+  'experiences': {
+    fr: 'Expériences',
+    en: 'Experiences'
+  },
+  'experiences_format': {
+    fr: 'Format attendu : [{"title": "...", "company": "...", "description": "...", "start_date": "...", "end_date": "..."}]',
+    en: 'Expected format: [{"title": "...", "company": "...", "description": "...", "start_date": "...", "end_date": "..."}]'
+  },
 
   // Abonnements
   'new_subscription': { fr: 'Nouvel abonnement', en: 'New subscription' },
@@ -246,6 +274,58 @@ export const translations: Translations = {
   'authors': { fr: 'Auteurs', en: 'Authors' },
   'add_author': { fr: 'Ajouter un auteur et appuyer sur Entrée', en: 'Add author & press Enter' },
   'messages': { fr: 'Messages', en: 'Messages' },
+  'title_required': {
+    fr: 'Le titre est requis',
+    en: 'Title is required'
+  },
+  'date_required': {
+    fr: 'La date est requise',
+    en: 'Date is required'
+  },
+  'description_required': {
+    fr: 'La description est requise',
+    en: 'Description is required'
+  },
+  'link_required': {
+    fr: 'Le lien est requis',
+    en: 'Link is required'
+  },
+  'loading_projects': {
+    fr: 'Chargement des projets...',
+    en: 'Loading projects...'
+  },
+  'please_login_again': {
+    fr: 'Veuillez vous reconnecter',
+    en: 'Please log in again'
+  },
+  'project_created_success': {
+    fr: 'Projet créé avec succès !',
+    en: 'Project created successfully!'
+  },
+  'project_updated_success': {
+    fr: 'Projet modifié avec succès !',
+    en: 'Project updated successfully!'
+  },
+  'project_deleted_success': {
+    fr: 'Projet supprimé avec succès !',
+    en: 'Project deleted successfully!'
+  },
+  'project_create_error': {
+    fr: 'Erreur lors de la création du projet',
+    en: 'Error creating project'
+  },
+  'project_update_error': {
+    fr: 'Erreur lors de la modification du projet',
+    en: 'Error updating project'
+  },
+  'project_delete_error': {
+    fr: 'Erreur lors de la suppression du projet',
+    en: 'Error deleting project'
+  },
+  'project_delete_confirm': {
+    fr: 'Êtes-vous sûr de vouloir supprimer ce projet ?',
+    en: 'Are you sure you want to delete this project?'
+  },
 
   // Paiement
   'payment': { fr: 'Paiement', en: 'Payment' },
@@ -306,6 +386,195 @@ export const translations: Translations = {
   'whatsapp': { fr: 'WhatsApp', en: 'WhatsApp' },
   'twitter': { fr: 'X (Twitter)', en: 'X (Twitter)' },
   'github': { fr: 'GitHub', en: 'GitHub' },
+
+  // ==================== NOUVELLES CLÉS POUR L'INSCRIPTION ====================
+  'first_name': {
+    fr: 'Prénom',
+    en: 'First name'
+  },
+  'last_name': {
+    fr: 'Nom',
+    en: 'Last name'
+  },
+  'already_have_account': {
+    fr: 'Déjà un compte ?',
+    en: 'Already have an account?'
+  },
+  'registration_success': {
+    fr: '✅ Inscription réussie ! Un email d\'activation vous a été envoyé. Vérifiez votre boîte mail (et vos spams).',
+    en: '✅ Registration successful! An activation email has been sent to you. Check your inbox (and spam).'
+  },
+  'registration_success_activate': {
+    fr: '✅ Inscription réussie ! Veuillez activer votre compte via le lien reçu par email.',
+    en: '✅ Registration successful! Please activate your account via the link received by email.'
+  },
+  'registering': {
+    fr: 'Inscription...',
+    en: 'Registering...'
+  },
+  'passwords_not_match': {
+    fr: 'Les mots de passe ne correspondent pas',
+    en: 'Passwords do not match'
+  },
+  'registration_error': {
+    fr: 'Erreur lors de l\'inscription',
+    en: 'Registration error'
+  },
+
+  // ==================== ACTIVATION DE COMPTE ====================
+  'activation_in_progress': {
+    fr: 'Activation en cours...',
+    en: 'Activating...'
+  },
+  'please_wait': {
+    fr: 'Veuillez patienter...',
+    en: 'Please wait...'
+  },
+  'activation_token_missing': {
+    fr: "Token d'activation manquant",
+    en: 'Missing activation token'
+  },
+  'account_activated': {
+    fr: 'Compte activé !',
+    en: 'Account Activated!'
+  },
+  'account_activated_successfully': {
+    fr: 'Votre compte a été activé avec succès !',
+    en: 'Your account has been activated successfully!'
+  },
+  'redirecting_to_login': {
+    fr: 'Redirection vers la connexion...',
+    en: 'Redirecting to login...'
+  },
+  'login_now': {
+    fr: 'Se connecter maintenant',
+    en: 'Login now'
+  },
+  'activation_error': {
+    fr: "Erreur d'activation",
+    en: 'Activation Error'
+  },
+  'account_activation_error': {
+    fr: "Erreur lors de l'activation du compte",
+    en: 'Error activating account'
+  },
+  'create_account': {
+    fr: 'Créer un compte',
+    en: 'Create an account'
+  },
+
+  // ==================== PAGE CHERCHEUR DETAIL ====================
+  'view_profile': {
+    fr: 'Voir le profil',
+    en: 'View Profile'
+  },
+  'profile_completion': {
+    fr: 'Complétude du profil',
+    en: 'Profile Completion'
+  },
+  'cv_description': {
+    fr: 'Consultez ou téléchargez le CV du chercheur.',
+    en: "View or download the researcher's CV."
+  },
+  'view_cv': {
+    fr: 'Voir le CV',
+    en: 'View CV'
+  },
+  'download': {
+    fr: 'Télécharger',
+    en: 'Download'
+  },
+  'back': {
+    fr: 'Retour',
+    en: 'Back'
+  },
+  'gender': {
+    fr: 'Genre',
+    en: 'Gender'
+  },
+  'grade': {
+    fr: 'Grade',
+    en: 'Grade'
+  },
+  'domain': {
+    fr: 'Domaine',
+    en: 'Domain'
+  },
+  'journal': {
+    fr: 'Journal',
+    en: 'Journal'
+  },
+  'no_description': {
+    fr: 'Aucune description disponible',
+    en: 'No description available'
+  },
+
+  'cv_exists': {
+    fr: 'CV actuellement enregistré',
+    en: 'Current CV'
+  },
+
+  // ==================== LOGIN ====================
+  'logging_in': {
+    fr: 'Connexion...',
+    en: 'Logging in...'
+  },
+  'dont_have_account': {
+    fr: 'Pas encore de compte ?',
+    en: "Don't have an account?"
+  },
+  'sign_up': {
+    fr: "S'inscrire",
+    en: 'Register'
+  },
+
+  // ==================== RESEARCHERS ====================
+  'researchers': {
+    fr: 'Nos chercheurs',
+    en: 'Our researchers'
+  },
+  'no_researchers_found': {
+    fr: 'Aucun chercheur trouvé.',
+    en: 'No researchers found.'
+  },
+
+  // ==================== PUBLIC RESEARCHER PAGE ====================
+  'languages_title': {
+    fr: 'Langues',
+    en: 'Languages'
+  },
+  'degrees_title': {
+    fr: 'Diplômes / Certifications',
+    en: 'Degrees / Certifications'
+  },
+  'experiences_title': {
+    fr: 'Expériences',
+    en: 'Experience'
+  },
+  'view_publication': {
+    fr: 'Voir la publication',
+    en: 'View publication'
+  },
+  'view_project': {
+    fr: 'Voir le projet',
+    en: 'View project'
+  },
+  'email_label': {
+    fr: 'Email',
+    en: 'Email'
+  },
+  'whatsapp_label': {
+    fr: 'WhatsApp',
+    en: 'WhatsApp'
+  },
+  'linkedin_label': {
+    fr: 'LinkedIn',
+    en: 'LinkedIn'
+  },
+  'github_label': {
+    fr: 'GitHub',
+    en: 'GitHub'
+  },
 
   // Security
   'password_required': { fr: 'Le mot de passe est requis', en: 'Password is required' },

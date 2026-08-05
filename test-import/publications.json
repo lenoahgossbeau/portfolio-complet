@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Deep Learning for Medical Image Analysis",
+    "year": 2024,
+    "journal": "International Journal of Artificial Intelligence",
+    "doi": "10.1234/ijai.2024.001",
+    "coauthors": [
+      "Marie Claire Ndzi",
+      "Paul Nkem"
+    ]
+  },
+  {
+    "title": "Machine Learning Approaches for Smart Agriculture",
+    "year": 2023,
+    "journal": "African Journal of Computer Science",
+    "doi": "10.5678/ajcs.2023.045",
+    "coauthors": [
+      "Jean Dupont",
+      "Alice Mbarga"
+    ]
+  }
+]

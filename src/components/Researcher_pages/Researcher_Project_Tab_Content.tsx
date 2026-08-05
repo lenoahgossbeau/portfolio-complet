@@ -9,11 +9,22 @@ import React, {
 
 import Re_ProjectSlider from "@/components/Researcher_pages/Researcher_Project_Preview";
 import { IoCameraOutline } from "react-icons/io5";
-import { API_ENDPOINTS, fetchWithAuth } from "@/lib/api";
+import {
+  API_ENDPOINTS,
+  API_BASE_URL,
+  fetchWithAuth,
+  getProfile,
+} from "@/lib/api";
+import { useLanguage } from "@/hooks/useLanguage";
+import { t } from "@/locales/translations";
 
 export default function Researcher_Project_Tab_Content() {
+  const { language } = useLanguage();
+  const langKey = language.toLowerCase();
+
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileId, setProfileId] = useState<number | null>(null);
 
   const [form, setForm] = useState({
     id: null as number | null,
@@ -28,6 +39,7 @@ export default function Researcher_Project_Tab_Content() {
 
   const [imagePreview, setImagePreview] =
     useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const fileInputRef =
     useRef<HTMLInputElement | null>(null);
@@ -41,8 +53,27 @@ export default function Researcher_Project_Tab_Content() {
 
   // Charger les projets au démarrage
   useEffect(() => {
-    fetchProjects();
+    const init = async () => {
+      await loadProfile();
+      await fetchProjects();
+    };
+
+    init();
   }, []);
+
+  const loadProfile = async () => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) return;
+
+    try {
+      const profile = await getProfile(token);
+      console.log("Profil connecté :", profile);
+      setProfileId(profile.id);
+    } catch (error) {
+      console.error("Erreur chargement profil :", error);
+    }
+  };
 
   const formatProjects = (data: any[]) => {
     return data.map((project: any) => ({
@@ -51,7 +82,7 @@ export default function Researcher_Project_Tab_Content() {
       title: project.title || "",
       date: project.year?.toString() || "",
       description: project.description || "",
-      link: project.link || `/projects/${project.id}`,
+      link: project.link || "",
     }));
   };
 
@@ -77,6 +108,8 @@ export default function Researcher_Project_Tab_Content() {
       }
 
       const data = await response.json();
+
+      console.log("Projects API:", data);
 
       const formattedProjects = formatProjects(data);
 
@@ -108,6 +141,8 @@ export default function Researcher_Project_Tab_Content() {
 
       const data = await response.json();
 
+      console.log("Projects API (refresh):", data);
+
       setProjects(formatProjects(data));
     } catch (error) {
       console.error(
@@ -129,6 +164,8 @@ export default function Researcher_Project_Tab_Content() {
     const file = e.target.files?.[0];
 
     if (!file) return;
+
+    setSelectedFile(file);
 
     if (!file.type.startsWith("image/")) {
       alert("Please upload an image file");
@@ -177,20 +214,19 @@ export default function Researcher_Project_Tab_Content() {
     } = {};
 
     if (!form.title.trim()) {
-      newErrors.title = "Title is required";
+      newErrors.title = t("title_required", langKey);
     }
 
     if (!form.date.trim()) {
-      newErrors.date = "Date is required";
+      newErrors.date = t("date_required", langKey);
     }
 
     if (!form.description.trim()) {
-      newErrors.description =
-        "Description is required";
+      newErrors.description = t("description_required", langKey);
     }
 
     if (!form.link.trim()) {
-      newErrors.link = "Link is required";
+      newErrors.link = t("link_required", langKey);
     }
 
     setErrors({
@@ -215,6 +251,7 @@ export default function Researcher_Project_Tab_Content() {
     });
 
     setImagePreview(null);
+    setSelectedFile(null);
 
     setErrors({
       title: "",
@@ -236,7 +273,7 @@ export default function Researcher_Project_Tab_Content() {
       localStorage.getItem("access_token");
 
     if (!token) {
-      alert("Veuillez vous reconnecter");
+      alert(t("please_login_again", langKey));
       return;
     }
 
@@ -245,12 +282,36 @@ export default function Researcher_Project_Tab_Content() {
       10
     );
 
+    let imageUrl = form.image;
+
+    if (selectedFile) {
+      const uploadData = new FormData();
+      uploadData.append("file", selectedFile);
+
+      const uploadResponse = await fetchWithAuth(
+        `${API_ENDPOINTS.projects}upload-image`,
+        {
+          method: "POST",
+          body: uploadData,
+        }
+      );
+
+      if (!uploadResponse.ok) {
+        alert("Erreur lors de l'upload de l'image.");
+        return;
+      }
+
+      const uploadResult = await uploadResponse.json();
+      imageUrl = uploadResult.image_url;
+    }
+
     const body = {
-      profile_id: 1,
       year,
       title: form.title,
       coauthor: [],
       description: form.description,
+      image: imageUrl,
+      link: form.link,
     };
 
     try {
@@ -270,13 +331,13 @@ export default function Researcher_Project_Tab_Content() {
         await refreshProjects();
         resetForm();
 
-        alert("Projet créé avec succès !");
+        alert(t("project_created_success", langKey));
       } else {
         const error = await response.json();
 
         alert(
           `Erreur: ${
-            error.detail || "Création échouée"
+            error.detail || t("project_create_error", langKey)
           }`
         );
       }
@@ -286,9 +347,7 @@ export default function Researcher_Project_Tab_Content() {
         error
       );
 
-      alert(
-        "Erreur lors de la création du projet"
-      );
+      alert(t("project_create_error", langKey));
     }
   };
 
@@ -302,7 +361,7 @@ export default function Researcher_Project_Tab_Content() {
       localStorage.getItem("access_token");
 
     if (!token) {
-      alert("Veuillez vous reconnecter");
+      alert(t("please_login_again", langKey));
       return;
     }
 
@@ -311,11 +370,36 @@ export default function Researcher_Project_Tab_Content() {
       10
     );
 
+    let imageUrl = form.image;
+
+    if (selectedFile) {
+      const uploadData = new FormData();
+      uploadData.append("file", selectedFile);
+
+      const uploadResponse = await fetchWithAuth(
+        `${API_ENDPOINTS.projects}upload-image`,
+        {
+          method: "POST",
+          body: uploadData,
+        }
+      );
+
+      if (!uploadResponse.ok) {
+        alert("Erreur lors de l'upload de l'image.");
+        return;
+      }
+
+      const uploadResult = await uploadResponse.json();
+      imageUrl = uploadResult.image_url;
+    }
+
     const body = {
       year,
       title: form.title,
       coauthor: [],
       description: form.description,
+      image: imageUrl,
+      link: form.link,
     };
 
     try {
@@ -335,14 +419,13 @@ export default function Researcher_Project_Tab_Content() {
         await refreshProjects();
         resetForm();
 
-        alert("Projet modifié avec succès !");
+        alert(t("project_updated_success", langKey));
       } else {
         const error = await response.json();
 
         alert(
           `Erreur: ${
-            error.detail ||
-            "Modification échouée"
+            error.detail || t("project_update_error", langKey)
           }`
         );
       }
@@ -352,9 +435,7 @@ export default function Researcher_Project_Tab_Content() {
         error
       );
 
-      alert(
-        "Erreur lors de la modification du projet"
-      );
+      alert(t("project_update_error", langKey));
     }
   };
 
@@ -362,6 +443,8 @@ export default function Researcher_Project_Tab_Content() {
   const handleEditFromCard = (
     project: any
   ) => {
+    console.log("Projet reçu :", project);
+
     setForm({
       id: project.id,
       image: project.image || "",
@@ -371,14 +454,17 @@ export default function Researcher_Project_Tab_Content() {
       link: project.link || "",
     });
 
-    setImagePreview(project.image || null);
+    setImagePreview(
+      project.image ? `${API_BASE_URL}${project.image}` : null
+    );
+    setSelectedFile(null);
   };
 
   // Supprimer un projet
   const handleDeleteFromCard = async (
     id: number
   ) => {
-    if (!confirm("Supprimer ce projet ?")) {
+    if (!confirm(t("project_delete_confirm", langKey))) {
       return;
     }
 
@@ -386,7 +472,7 @@ export default function Researcher_Project_Tab_Content() {
       localStorage.getItem("access_token");
 
     if (!token) {
-      alert("Veuillez vous reconnecter");
+      alert(t("please_login_again", langKey));
       return;
     }
 
@@ -408,13 +494,9 @@ export default function Researcher_Project_Tab_Content() {
           resetForm();
         }
 
-        alert(
-          "Projet supprimé avec succès !"
-        );
+        alert(t("project_deleted_success", langKey));
       } else {
-        alert(
-          "Erreur lors de la suppression"
-        );
+        alert(t("project_delete_error", langKey));
       }
     } catch (error) {
       console.error(
@@ -422,16 +504,14 @@ export default function Researcher_Project_Tab_Content() {
         error
       );
 
-      alert(
-        "Erreur lors de la suppression"
-      );
+      alert(t("project_delete_error", langKey));
     }
   };
 
   if (loading) {
     return (
       <div className="text-center py-20">
-        Chargement des projets...
+        {t("loading_projects", langKey)}
       </div>
     );
   }
@@ -446,9 +526,11 @@ export default function Researcher_Project_Tab_Content() {
           onClick={handleImageClick}
           className="relative w-full h-60 bg-gray-300 flex items-center justify-center cursor-pointer"
         >
-          {form.image ? (
+          {(imagePreview || form.image) ? (
             <img
-              src={form.image}
+              src={imagePreview || (form.image.startsWith("http")
+                ? form.image
+                : `${API_BASE_URL}${form.image}`)}
               alt="Project preview"
               className="w-full h-full object-cover"
             />
@@ -476,7 +558,7 @@ export default function Researcher_Project_Tab_Content() {
             <div className="w-1/2">
               <input
                 type="text"
-                placeholder="Title"
+                placeholder={t("title", langKey)}
                 value={form.title}
                 onChange={(e) =>
                   updateField(
@@ -517,7 +599,7 @@ export default function Researcher_Project_Tab_Content() {
 
           <div>
             <textarea
-              placeholder="Description"
+              placeholder={t("description", langKey)}
               value={form.description}
               onChange={(e) =>
                 updateField(
@@ -539,7 +621,7 @@ export default function Researcher_Project_Tab_Content() {
           <div>
             <input
               type="url"
-              placeholder="Link"
+              placeholder={t("link", langKey)}
               value={form.link}
               onChange={(e) =>
                 updateField(
@@ -563,7 +645,7 @@ export default function Researcher_Project_Tab_Content() {
               onClick={resetForm}
               className="cursor-pointer px-4 py-2 border border-gray-400 rounded-full text-gray-600 hover:bg-gray-100"
             >
-              Cancel
+              {t("cancel", langKey)}
             </button>
 
             {!isEditing ? (
@@ -572,7 +654,7 @@ export default function Researcher_Project_Tab_Content() {
                 onClick={handleCreate}
                 className="cursor-pointer px-4 py-2 bg-[#003F7F] text-white rounded-full hover:bg-[#004F9F]"
               >
-                CREATE
+                {t("create", langKey)}
               </button>
             ) : (
               <button
@@ -580,7 +662,7 @@ export default function Researcher_Project_Tab_Content() {
                 onClick={handleSave}
                 className="cursor-pointer px-4 py-2 bg-[#003F7F] text-white rounded-full hover:bg-[#004F9F]"
               >
-                SAVE
+                {t("save", langKey)}
               </button>
             )}
           </div>

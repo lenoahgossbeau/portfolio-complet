@@ -1,0 +1,23 @@
+[
+  {
+    "title": "SmartFuel Guard",
+    "year": 2025,
+    "description": "Développement d'une plateforme intelligente de surveillance des cuves de carburant avec tableau de bord web, gestion des alertes et suivi des niveaux en temps réel.",
+    "budget": 25000,
+    "coauthors": [
+      "Jean Dupont",
+      "Alice Mbarga"
+    ]
+  },
+  {
+    "title": "AI Research Collaboration Platform",
+    "year": 2024,
+    "description": "Conception d'une plateforme collaborative permettant aux chercheurs de partager leurs publications, projets et compétences à l'aide d'une interface moderne.",
+    "budget": 50000,
+    "coauthors": [
+      "Marie Claire Ndzi",
+      "Paul Nkem",
+      "Jean Dupont"
+    ]
+  }
+]

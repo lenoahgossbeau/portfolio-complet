@@ -8,7 +8,7 @@ export const API_BASE_URL =
   (isProduction ? PROD_API_URL : DEV_API_URL);
 
 export const API_ENDPOINTS = {
-  publications: `${API_BASE_URL}/publications/publications/`,
+  publications: `${API_BASE_URL}/publications/`,
   projects: `${API_BASE_URL}/projects/`,
   distinctions: `${API_BASE_URL}/distinctions`,
   academic_career: `${API_BASE_URL}/academic-career`,
@@ -30,13 +30,21 @@ export async function fetchWithAuth(
 ) {
   const token = localStorage.getItem("access_token");
 
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
-  };
+  const headers = new Headers(options.headers);
 
-  const response = await fetch(endpoint, { ...options, headers });
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  // Pour FormData, laisser le navigateur définir automatiquement Content-Type
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(endpoint, {
+    ...options,
+    headers,
+  });
 
   if (response.status === 401) {
     localStorage.removeItem("access_token");
@@ -67,7 +75,7 @@ export async function logout() {
 
 // ===================== PROJECTS =====================
 export async function getProjects() {
-  const res = await fetch(`${API_BASE_URL}/api/projects/`, {
+  const res = await fetch(`${API_BASE_URL}/projects/`, {
     cache: "no-store",
   });
 
@@ -77,7 +85,7 @@ export async function getProjects() {
 
 // ===================== PUBLICATIONS =====================
 export async function getPublications() {
-  const res = await fetch(`${API_BASE_URL}/api/publications/`, {
+  const res = await fetch(`${API_BASE_URL}/publications/`, {
     cache: "no-store",
   });
 
@@ -99,7 +107,7 @@ export async function getProfile(token: string) {
 
 // ===================== ACADEMIC CAREER =====================
 export async function getAcademicCareer() {
-  const res = await fetch(`${API_BASE_URL}/api/academic-careers/`, {
+  const res = await fetch(`${API_BASE_URL}/academic-career/`, {
     cache: "no-store",
   });
 
@@ -109,7 +117,7 @@ export async function getAcademicCareer() {
 
 // ===================== DISTINCTIONS =====================
 export async function getDistinctions() {
-  const res = await fetch(`${API_BASE_URL}/api/distinctions/`, {
+  const res = await fetch(`${API_BASE_URL}/distinctions/`, {
     cache: "no-store",
   });
 
@@ -119,7 +127,7 @@ export async function getDistinctions() {
 
 // ===================== COURS =====================
 export async function getCours() {
-  const res = await fetch(`${API_BASE_URL}/api/cours/`, {
+  const res = await fetch(`${API_BASE_URL}/cours/`, {
     cache: "no-store",
   });
 
@@ -129,7 +137,7 @@ export async function getCours() {
 
 // ===================== DASHBOARD ADMIN =====================
 export async function getDashboardStats(token: string) {
-  const res = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
+  const res = await fetch(`${API_BASE_URL}/dashboard/stats`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

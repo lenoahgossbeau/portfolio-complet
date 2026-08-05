@@ -3,7 +3,8 @@ import Slider from "react-slick";
 import { useState, useRef, useEffect } from "react";
 import ProjectCard from "@/components/ProjectCard";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { title } from "process";
+import { useLanguage } from "@/hooks/useLanguage";
+import { t } from "@/locales/translations";
 
 function NextArrow({ onClick, show }: any) {
   if (!show) return null;
@@ -40,6 +41,8 @@ export default function Re_ProjectSlider({
   onEdit?: (data: any) => void;
   onDelete?: (id: number) => void;
 }) {
+  const { language } = useLanguage();
+  const langKey = language.toLowerCase();
 
   const sliderRef = useRef<any>(null);
 
@@ -136,7 +139,9 @@ export default function Re_ProjectSlider({
           }}
           className="cursor-pointer px-4 py-3 bg-[#003F7F] text-white rounded-2xl hover:bg-[#004F9F] transition"
         >
-          {viewAll ? "Show Less" : "View All "}
+          {viewAll
+            ? t("show_less", langKey)
+            : t("view_all", langKey)}
         </button>
       </div>
     </div>

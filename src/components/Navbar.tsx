@@ -21,7 +21,7 @@ export default function Navbar() {
   const [langOpen, setLangOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const { language, changeLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -124,7 +124,7 @@ export default function Navbar() {
   };
 
   const handleLanguageChange = (lang: string) => {
-    changeLanguage(lang);
+    setLanguage(lang);
     setLangOpen(false);
   };
 
@@ -238,13 +238,13 @@ export default function Navbar() {
 
             {langOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg overflow-hidden z-50">
-                {["EN", "FR"].map((lang) => (
+                {["en", "fr"].map((lang) => (
                   <button
                     key={lang}
                     onClick={() => handleLanguageChange(lang)}
                     className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
                   >
-                    {lang}
+                    {lang.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -307,13 +307,13 @@ export default function Navbar() {
 
               {langOpen && (
                 <div className="absolute right-48 flex -mt-8 bg-white shadow-lg rounded-lg overflow-hidden">
-                  {["EN", "FR"].map((lang) => (
+                  {["en", "fr"].map((lang) => (
                     <button
                       key={lang}
                       onClick={() => handleLanguageChange(lang)}
                       className="block px-4 py-2 hover:bg-gray-100 w-full text-left"
                     >
-                      {lang}
+                      {lang.toUpperCase()}
                     </button>
                   ))}
                 </div>

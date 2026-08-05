@@ -110,13 +110,19 @@ export default function LoginPage() {
                 disabled={loading}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
-                {loading ? (language === 'fr' ? 'Connexion...' : 'Logging in...') : t('login', language)}
+                {loading ? t('logging_in', language) : t('login', language)}
               </button>
             </div>
 
             <div className="text-center mt-4">
-              <Link href="/auth/register" className="text-sm text-indigo-600 hover:text-indigo-500">
-                {language === 'fr' ? 'Pas encore de compte ? S\'inscrire' : 'Don\'t have an account? Register'}
+              <Link
+                href="/auth/register"
+                className="text-sm text-indigo-600 hover:text-indigo-500"
+              >
+                <>
+                  {t('dont_have_account', language)}{' '}
+                  {t('sign_up', language)}
+                </>
               </Link>
             </div>
           </form>

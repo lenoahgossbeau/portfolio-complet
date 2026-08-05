@@ -2,8 +2,12 @@ import React, { useState, useRef, ChangeEvent, useEffect } from "react";
 import Re_PublicationSlider from "@/components/Researcher_pages/Researcher_Publication_Preview";
 import { IoCameraOutline } from "react-icons/io5";
 import { API_ENDPOINTS, fetchWithAuth } from '@/lib/api';
+import { useLanguage } from "@/hooks/useLanguage";
+import { t } from "@/locales/translations";
 
 export default function Researcher_Publication_Tab_Content() {
+    const { language } = useLanguage();
+    const langKey = language.toLowerCase();
 
     ////////////////////////////////////////////
     //////  PUBLICATION STATE (FROM API)  //////
@@ -27,11 +31,13 @@ export default function Researcher_Publication_Tab_Content() {
                 const data = await response.json();
                 const formattedPublications = data.map((pub: any) => ({
                     id: pub.id,
-                    image: "",
+                    image: pub.image || "",
                     title: pub.title,
                     date: pub.year?.toString() || '',
                     description: pub.description || '',
                     author: pub.coauthor || [],
+                    journal: pub.journal || '',
+                    doi: pub.doi || '',
                     link: `/publications/${pub.id}`
                 }));
                 setPublications(formattedPublications);
@@ -54,11 +60,13 @@ export default function Researcher_Publication_Tab_Content() {
         title: "",
         date: "",
         description: "",
-        link: ""
-    })
+        journal: "",
+        doi: ""
+    });
     const isEditing = form.id !== null;
   
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     ///////////////////////////////////////
@@ -67,8 +75,7 @@ export default function Researcher_Publication_Tab_Content() {
     const [errors, setErrors] = useState({
         title: "",
         date: "",
-        description: "",
-        link: ""
+        description: ""
     });
 
     // Gestion des auteurs
@@ -96,18 +103,28 @@ export default function Researcher_Publication_Tab_Content() {
 
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+
         if (!file) return;
 
+        setSelectedFile(file);
+
         if (!file.type.startsWith("image/")) {
-            alert("Please upload an image file");
+            alert(t("invalid_image_file", langKey));
             return;
         }
 
         const reader = new FileReader();
         reader.onloadend = () => {
-            setImagePreview(reader.result as string);
-            setForm((prev) => ({ ...prev, image: reader.result as string }));
+            const imageData = reader.result as string;
+
+            setImagePreview(imageData);
+
+            setForm((prev) => ({
+                ...prev,
+                image: imageData
+            }));
         };
+
         reader.readAsDataURL(file);
     };
     
@@ -126,11 +143,13 @@ export default function Researcher_Publication_Tab_Content() {
             const data = await response.json();
             const formattedPublications = data.map((pub: any) => ({
                 id: pub.id,
-                image: "",
+                image: pub.image || "",
                 title: pub.title,
                 date: pub.year?.toString() || '',
                 description: pub.description || '',
                 author: pub.coauthor || [],
+                journal: pub.journal || '',
+                doi: pub.doi || '',
                 link: `/publications/${pub.id}`
             }));
             setPublications(formattedPublications);
@@ -145,31 +164,55 @@ export default function Researcher_Publication_Tab_Content() {
         
         const token = localStorage.getItem('access_token');
         if (!token) {
-            alert('Veuillez vous reconnecter');
+            alert(t("please_login_again", langKey));
             return;
         }
 
         if (authors.length === 0) {
-            alert('Au moins un auteur est requis');
+            alert(t("author_required", langKey));
             return;
         }
 
+        const year = parseInt(form.date.split('-')[0], 10);
+
+        let imageUrl = form.image;
+
+        if (selectedFile) {
+            const uploadData = new FormData();
+            uploadData.append("file", selectedFile);
+
+            const uploadResponse = await fetchWithAuth(
+                `${API_ENDPOINTS.publications}upload-image`,
+                {
+                    method: "POST",
+                    body: uploadData,
+                }
+            );
+
+            if (!uploadResponse.ok) {
+                alert("Erreur lors de l'upload de l'image.");
+                return;
+            }
+
+            const uploadResult = await uploadResponse.json();
+            imageUrl = uploadResult.image_url;
+        }
+
         const body = {
-            profile_id: 1,
             year: parseInt(form.date.split('-')[0]),
             title: form.title,
             coauthor: authors,
-            journal: "Journal",
-            doi: "10.1234/test.2024.001",
-            description: form.description
+            journal: form.journal,
+            doi: form.doi,
+            description: form.description,
+            image: imageUrl,
         };
 
         try {
-            const response = await fetch(API_ENDPOINTS.publications, {
+            const response = await fetchWithAuth(API_ENDPOINTS.publications, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(body)
             });
@@ -178,14 +221,14 @@ export default function Researcher_Publication_Tab_Content() {
                 await refreshPublications();
                 resetForm();
                 setAuthors([]);
-                alert('Publication créée avec succès !');
+                alert(t("publication_created_success", langKey));
             } else {
                 const error = await response.json();
                 alert(`Erreur: ${error.detail || 'Création échouée'}`);
             }
         } catch (error) {
             console.error('Erreur création publication:', error);
-            alert('Erreur lors de la création');
+            alert(t("publication_create_error", langKey));
         }
     };
 
@@ -195,23 +238,50 @@ export default function Researcher_Publication_Tab_Content() {
         
         const token = localStorage.getItem('access_token');
         if (!token) {
-            alert('Veuillez vous reconnecter');
+            alert(t("please_login_again", langKey));
             return;
+        }
+
+        const year = parseInt(form.date.split('-')[0], 10);
+
+        let imageUrl = form.image;
+
+        if (selectedFile) {
+            const uploadData = new FormData();
+            uploadData.append("file", selectedFile);
+
+            const uploadResponse = await fetchWithAuth(
+                `${API_ENDPOINTS.publications}upload-image`,
+                {
+                    method: "POST",
+                    body: uploadData,
+                }
+            );
+
+            if (!uploadResponse.ok) {
+                alert("Erreur lors de l'upload de l'image.");
+                return;
+            }
+
+            const uploadResult = await uploadResponse.json();
+            imageUrl = uploadResult.image_url;
         }
 
         const body = {
             year: parseInt(form.date.split('-')[0]),
             title: form.title,
             coauthor: authors,
-            description: form.description
+            journal: form.journal,
+            doi: form.doi,
+            description: form.description,
+            image: imageUrl,
         };
 
         try {
-            const response = await fetch(`${API_ENDPOINTS.publications}${form.id}`, {
+            const response = await fetchWithAuth(`${API_ENDPOINTS.publications}${form.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(body)
             });
@@ -220,13 +290,14 @@ export default function Researcher_Publication_Tab_Content() {
                 await refreshPublications();
                 resetForm();
                 setAuthors([]);
-                alert('Publication modifiée avec succès !');
+                alert(t("publication_updated_success", langKey));
             } else {
-                alert('Erreur lors de la modification');
+                const error = await response.json();
+                alert(`Erreur: ${error.detail || 'Modification échouée'}`);
             }
         } catch (error) {
             console.error('Erreur modification publication:', error);
-            alert('Erreur lors de la modification');
+            alert(t("publication_update_error", langKey));
         }
     };
 
@@ -237,15 +308,16 @@ export default function Researcher_Publication_Tab_Content() {
             title: "",
             date: "",
             description: "",
-            link: ""
+            journal: "",
+            doi: ""
         });
         setImagePreview(null);
+        setSelectedFile(null);
         setAuthors([]);
         setErrors({
             title: "",
             date: "",
-            description: "",
-            link: ""
+            description: ""
         });
     };
 
@@ -255,54 +327,58 @@ export default function Researcher_Publication_Tab_Content() {
             image: pub.image || "",
             title: pub.title,
             date: pub.date,
-            description: pub.description,
-            link: pub.link
+            description: pub.description || '',
+            journal: pub.journal || '',
+            doi: pub.doi || ''
         });
         setAuthors(pub.author || []);
     };
 
     const handleDeleteFromCard = async (id: number) => {
-        if (!confirm('Supprimer cette publication ?')) return;
+        if (!confirm(t("publication_delete_confirm", langKey))) return;
         
         const token = localStorage.getItem('access_token');
         if (!token) {
-            alert('Veuillez vous reconnecter');
+            alert(t("please_login_again", langKey));
             return;
         }
 
         try {
-            const response = await fetch(`${API_ENDPOINTS.publications}${id}`, {
+            const response = await fetchWithAuth(`${API_ENDPOINTS.publications}${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json',
                 }
             });
 
             if (response.ok) {
                 await refreshPublications();
                 if (form.id === id) resetForm();
-                alert('Publication supprimée !');
+                alert(t("publication_deleted_success", langKey));
             } else {
-                alert('Erreur lors de la suppression');
+                alert(t("publication_delete_error", langKey));
             }
         } catch (error) {
             console.error('Erreur suppression:', error);
-            alert('Erreur lors de la suppression');
+            alert(t("publication_delete_error", langKey));
         }
     };
 
     const validate = () => {
         const newErrors: any = {};
-        if (!form.title.trim()) newErrors.title = "Title is required";
-        if (!form.date.trim()) newErrors.date = "Date is required";
-        if (!form.description.trim()) newErrors.description = "Description is required";
-        if (!form.link.trim()) newErrors.link = "Link is required";
+        if (!form.title.trim()) newErrors.title = t("title_required", langKey);
+        if (!form.date.trim()) newErrors.date = t("date_required", langKey);
+        if (!form.description.trim()) newErrors.description = t("description_required", langKey);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     if (loading) {
-        return <div className="text-center py-20">Chargement des publications...</div>;
+        return (
+            <div className="text-center py-20">
+                {t("loading_publications", langKey)}
+            </div>
+        );
     }
 
     return (
@@ -317,7 +393,15 @@ export default function Researcher_Publication_Tab_Content() {
                     className="relative w-full h-60 bg-gray-300 flex items-center justify-center cursor-pointer"
                 >
                     {form.image ? (
-                        <img src={form.image} className="w-full h-full object-cover" />
+                        <img
+                            src={
+                                form.image.startsWith("data:")
+                                    ? form.image
+                                    : `${API_ENDPOINTS.profile.replace("/profiles", "")}${form.image}`
+                            }
+                            className="w-full h-full object-cover"
+                            alt="Publication preview"
+                        />
                     ) : (
                         <div className="flex flex-col items-center text-gray-500">
                             <IoCameraOutline size={45} className="text-gray-500" />
@@ -340,7 +424,7 @@ export default function Researcher_Publication_Tab_Content() {
                         <div className="w-1/2">
                             <input
                                 type="text"
-                                placeholder="Title"
+                                placeholder={t("title", langKey)}
                                 value={form.title}
                                 onChange={(e) => updateField("title", e.target.value)}
                                 className="w-full pl-2 border-b border-gray-300 focus:border-blue-600 outline-none py-1"
@@ -378,7 +462,7 @@ export default function Researcher_Publication_Tab_Content() {
                         <div className="flex gap-2">
                             <input
                                 type="text"
-                                placeholder="Add author & press Enter"
+                                placeholder={t("add_author", langKey)}
                                 value={authorInput}
                                 onChange={(e) => setAuthorInput(e.target.value)}
                                 onKeyDown={handleAuthorKeyDown}
@@ -389,14 +473,36 @@ export default function Researcher_Publication_Tab_Content() {
                                 onClick={addAuthor}
                                 className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
                             >
-                                Add
+                                {t("add", langKey)}
                             </button>
                         </div>
+                    </div>
+
+                    {/* JOURNAL */}
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Journal / Conference"
+                            value={form.journal}
+                            onChange={(e) => updateField("journal", e.target.value)}
+                            className="w-full pl-2 border-b border-gray-300 focus:border-blue-600 outline-none py-1"
+                        />
+                    </div>
+
+                    {/* DOI */}
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="DOI (e.g. 10.1234/test.2024.001)"
+                            value={form.doi}
+                            onChange={(e) => updateField("doi", e.target.value)}
+                            className="w-full pl-2 border-b border-gray-300 focus:border-blue-600 outline-none py-1"
+                        />
                     </div>
                       
                     <div>
                         <textarea
-                            placeholder="Description"
+                            placeholder={t("description", langKey)}
                             value={form.description}
                             onChange={(e) => updateField("description", e.target.value)}
                             className="w-full border border-gray-300 rounded-lg p-3 focus:border-blue-600 outline-none resize-none scrollbar-hide"
@@ -405,23 +511,12 @@ export default function Researcher_Publication_Tab_Content() {
                         {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
                     </div>
                       
-                    <div>
-                        <input
-                            type="link"
-                            placeholder="Link"
-                            value={form.link}
-                            onChange={(e) => updateField("link", e.target.value)}
-                            className="w-full pl-2 border-b border-gray-300 focus:border-blue-600 outline-none py-1"
-                        />
-                        {errors.link && <p className="text-red-500 text-sm">{errors.link}</p>}
-                    </div>
-                      
                     <div className="flex justify-center gap-4 pt-4">
                         <button 
                             onClick={resetForm}
                             className="cursor-pointer px-4 py-2 border border-gray-400 rounded-full text-gray-600 hover:bg-gray-100"
                         >
-                            Cancel
+                            {t("cancel", langKey)}
                         </button>
 
                         {!isEditing ? (
@@ -429,14 +524,14 @@ export default function Researcher_Publication_Tab_Content() {
                                 onClick={handleCreate}
                                 className="cursor-pointer px-4 py-2 bg-[#003F7F] text-white rounded-full hover:bg-[#004F9F]"
                             >
-                                CREATE
+                                {t("create", langKey)}
                             </button>
                         ) : (
                             <button 
                                 onClick={handleSave}
                                 className="cursor-pointer px-4 py-2 bg-[#003F7F] text-white rounded-full hover:bg-[#004F9F]"
                             >
-                                SAVE
+                                {t("save", langKey)}
                             </button>
                         )}
                     </div>

@@ -94,13 +94,19 @@ type ResearcherDetails = {
   profile: {
     first_name: string;
     last_name: string;
+
+    gender: string;
+
     grade: string;
     specialite: string;
     diplome: string;
+
     bio: string;
     description: string;
+
     avatar: string;
     profile_picture: string;
+
     linkedin: string;
     whatsapp: string;
     twitter: string;
@@ -519,16 +525,39 @@ export default function ResearcherDetailsPage() {
               </h3>
               <div className="space-y-4 text-sm">
                 <div>
-                  <span className="text-gray-400 text-xs uppercase tracking-wider block">👤 {t('grade', language)}</span>
-                  <span className="text-gray-700 font-medium text-base">{researcher.profile?.grade || "-"}</span>
+                  <span className="text-gray-400 text-xs uppercase tracking-wider block">
+                    🚻 {t('gender', language)}
+                  </span>
+                  <span className="text-gray-700 font-medium text-base">
+                    {researcher.profile?.gender || "-"}
+                  </span>
                 </div>
+
                 <div>
-                  <span className="text-gray-400 text-xs uppercase tracking-wider block">🧠 {t('domain', language)}</span>
-                  <span className="text-gray-700 font-medium text-base">{researcher.profile?.specialite || "-"}</span>
+                  <span className="text-gray-400 text-xs uppercase tracking-wider block">
+                    👤 {t('grade', language)}
+                  </span>
+                  <span className="text-gray-700 font-medium text-base">
+                    {researcher.profile?.grade || "-"}
+                  </span>
                 </div>
+
                 <div>
-                  <span className="text-gray-400 text-xs uppercase tracking-wider block">🎓 {t('degree', language)}</span>
-                  <span className="text-gray-700 font-medium text-base">{researcher.profile?.diplome || "-"}</span>
+                  <span className="text-gray-400 text-xs uppercase tracking-wider block">
+                    🧠 {t('domain', language)}
+                  </span>
+                  <span className="text-gray-700 font-medium text-base">
+                    {researcher.profile?.specialite || "-"}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-gray-400 text-xs uppercase tracking-wider block">
+                    🎓 {t('degree', language)}
+                  </span>
+                  <span className="text-gray-700 font-medium text-base">
+                    {researcher.profile?.diplome || "-"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -680,35 +709,33 @@ export default function ResearcherDetailsPage() {
         </div>
       )}
 
-      {/* Onglet CV */}
-      {activeTab === "cv" && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-          <div className="text-4xl mb-4">📄</div>
-          <h3 className="text-xl font-bold mb-2">{t('cv_title', language)}</h3>
-          <p className="text-gray-500 mb-4">{t('cv_description', language)}</p>
-          {researcher.cv_url ? (
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <a
-                href={`/api/pdf-proxy?url=${encodeURIComponent(`${API_BASE_URL}${researcher.cv_url}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition inline-block"
-              >
-                👁️ {t('view_cv', language)}
-              </a>
-              <a
-                href={`${API_BASE_URL}/cv/download/${researcher.id}`}
-                download
-                className="px-5 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 transition inline-block"
-              >
-                ⬇ {t('download', language)}
-              </a>
-            </div>
-          ) : (
-            <p className="text-gray-500">{t('no_cv', language)}</p>
-          )}
-        </div>
-      )}
+  {/* Onglet CV */}
+{activeTab === "cv" && (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+    <div className="text-4xl mb-4">📄</div>
+    <h3 className="text-xl font-bold mb-2">{t('cv_title', language)}</h3>
+    <p className="text-gray-500 mb-4">{t('cv_description', language)}</p>
+    {researcher.cv_url ? (
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <button
+          onClick={() => window.open(`${API_BASE_URL}/cv/view/${researcher.id}`, '_blank')}
+          className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition inline-block"
+        >
+          👁️ {t('view_cv', language)}
+        </button>
+        <a
+          href={`${API_BASE_URL}/cv/download/${researcher.id}`}
+          download
+          className="px-5 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 transition inline-block"
+        >
+          ⬇ {t('download', language)}
+        </a>
+      </div>
+    ) : (
+      <p className="text-gray-500">{t('no_cv', language)}</p>
+    )}
+  </div>
+)}
 
       {/* Onglet Projets */}
       {activeTab === "projects" && (

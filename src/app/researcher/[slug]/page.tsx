@@ -128,7 +128,9 @@ export default function ResearcherSlugPage() {
           {/* Compétences techniques */}
           {profile.technical_skills && profile.technical_skills.length > 0 && (
             <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">⚙️ Compétences techniques</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                ⚙️ {t('technical_skills', language)}
+              </h2>
               <div className="space-y-3">
                 {profile.technical_skills.map((skill) => (
                   <div key={skill.id}>
@@ -151,7 +153,9 @@ export default function ResearcherSlugPage() {
           {/* Soft Skills */}
           {profile.soft_skills && profile.soft_skills.length > 0 && (
             <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">🤝 Soft Skills</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                🤝 {t('soft_skills', language)}
+              </h2>
               <div className="space-y-3">
                 {profile.soft_skills.map((skill) => (
                   <div key={skill.id}>
@@ -177,7 +181,9 @@ export default function ResearcherSlugPage() {
           {/* Langues */}
           {profile.languages && profile.languages.length > 0 && (
             <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">🌍 Langues</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                🌍 {t('languages_title', language)}
+              </h2>
               <div className="space-y-2">
                 {profile.languages.map((lang) => (
                   <div key={lang.id} className="flex items-center justify-between">
@@ -194,7 +200,9 @@ export default function ResearcherSlugPage() {
           {/* Diplômes */}
           {profile.degrees && profile.degrees.length > 0 && (
             <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">🎓 Diplômes / Certifications</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                🎓 {t('degrees_title', language)}
+              </h2>
               <div className="space-y-3">
                 {profile.degrees.map((degree) => (
                   <div key={degree.id} className="border-l-4 border-blue-500 pl-4">
@@ -212,7 +220,9 @@ export default function ResearcherSlugPage() {
         {/* Expériences */}
         {profile.experiences && profile.experiences.length > 0 && (
           <div className="bg-white rounded-2xl shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">💼 Expériences</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              💼 {t('experiences_title', language)}
+            </h2>
             <div className="space-y-4">
               {profile.experiences.map((exp) => (
                 <div key={exp.id} className="border-l-4 border-green-500 pl-4">
@@ -237,7 +247,7 @@ export default function ResearcherSlugPage() {
                 rel="noopener noreferrer"
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block"
               >
-                👁️ Voir le CV
+                👁️ {t('view_cv', language)}
               </a>
               <a
                 href={getMediaUrl(profile.cvUrl) || '#'}
@@ -265,7 +275,7 @@ export default function ResearcherSlugPage() {
                   {pub.description && <p className="text-sm text-gray-600">{pub.description}</p>}
                   {pub.link && (
                     <a href={pub.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
-                      Voir la publication →
+                      {t('view_publication', language)} →
                     </a>
                   )}
                 </div>
@@ -287,7 +297,7 @@ export default function ResearcherSlugPage() {
                   {proj.description && <p className="text-sm text-gray-600">{proj.description}</p>}
                   {proj.link && (
                     <a href={proj.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
-                      Voir le projet →
+                      {t('view_project', language)} →
                     </a>
                   )}
                 </div>
@@ -301,12 +311,12 @@ export default function ResearcherSlugPage() {
           <h2 className="text-xl font-semibold mb-4">📬 {t('contact_title', language)}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              {profile.email && <p className="text-gray-700">📧 <span className="font-medium">Email :</span> {profile.email}</p>}
-              {profile.whatsapp && <p className="text-gray-700">💬 <span className="font-medium">WhatsApp :</span> {profile.whatsapp}</p>}
+              {profile.email && <p className="text-gray-700">📧 <span className="font-medium">{t('email_label', language)} :</span> {profile.email}</p>}
+              {profile.whatsapp && <p className="text-gray-700">💬 <span className="font-medium">{t('whatsapp_label', language)} :</span> {profile.whatsapp}</p>}
             </div>
             <div className="space-y-2">
-              {profile.linkedin && <p className="text-gray-700">💼 <span className="font-medium">LinkedIn :</span> {profile.linkedin}</p>}
-              {profile.github && <p className="text-gray-700">🐙 <span className="font-medium">GitHub :</span> {profile.github}</p>}
+              {profile.linkedin && <p className="text-gray-700">💼 <span className="font-medium">{t('linkedin_label', language)} :</span> {profile.linkedin}</p>}
+              {profile.github && <p className="text-gray-700">🐙 <span className="font-medium">{t('github_label', language)} :</span> {profile.github}</p>}
             </div>
           </div>
         </div>
@@ -315,4 +325,3 @@ export default function ResearcherSlugPage() {
     </>
   );
 }
-

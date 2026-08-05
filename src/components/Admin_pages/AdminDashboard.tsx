@@ -18,6 +18,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { t } from '@/locales/translations';
 import dynamic from 'next/dynamic';
 import { useDebounce } from '@/hooks/useDebounce';
+import { API_BASE_URL, fetchWithAuth } from "@/lib/api";
 
 // Lazy loading des composants de graphiques
 const RevenueChart = dynamic(() => import('./RevenueChart'), { 
@@ -44,6 +45,14 @@ const AdminDashboard: React.FC<{ admin?: boolean }> = ({ admin = false }) => {
   const router = useRouter();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [platformStats, setPlatformStats] = useState({
+    researchers: 0,
+    publications: 0,
+    likes: 0,
+    favorites: 0,
+    comments: 0,
+    views: 0,
+  });
 
   const refreshSubscriptions = async () => {
     try {
@@ -54,14 +63,35 @@ const AdminDashboard: React.FC<{ admin?: boolean }> = ({ admin = false }) => {
     }
   };
 
+  const loadPlatformStatistics = async () => {
+    try {
+      const res = await fetchWithAuth(
+        `${API_BASE_URL}/admin/statistics/`
+      );
+
+      if (!res.ok) {
+        console.error("Erreur statistiques :", res.status);
+        return;
+      }
+
+      const data = await res.json();
+
+      setPlatformStats(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
+    const load = async () => {
       setLoading(true);
       try {
         const usersData = await fetchUsers();
         const subsData = await fetchSubscriptions();
         setUsers(Array.isArray(usersData) ? usersData : []);
         setSubscriptions(Array.isArray(subsData) ? subsData : []);
+        
+        await loadPlatformStatistics();
       } catch (error) {
         console.error('Erreur chargement données admin:', error);
         setUsers([]);
@@ -70,7 +100,7 @@ const AdminDashboard: React.FC<{ admin?: boolean }> = ({ admin = false }) => {
         setLoading(false);
       }
     };
-    loadData();
+    load();
   }, []);
 
   const accounts = users.map(user => ({
@@ -204,6 +234,61 @@ const AdminDashboard: React.FC<{ admin?: boolean }> = ({ admin = false }) => {
           </div>
         );
 
+      case "statistics":
+        return (
+          <div className="mt-10">
+            <h2 className="text-2xl font-bold mb-8">
+              Statistiques de la plateforme
+            </h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h3 className="text-gray-500">Chercheurs</h3>
+                <p className="text-3xl font-bold">
+                  {platformStats.researchers}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h3 className="text-gray-500">Publications</h3>
+                <p className="text-3xl font-bold">
+                  {platformStats.publications}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h3 className="text-gray-500">Likes</h3>
+                <p className="text-3xl font-bold">
+                  {platformStats.likes}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h3 className="text-gray-500">Favoris</h3>
+                <p className="text-3xl font-bold">
+                  {platformStats.favorites}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h3 className="text-gray-500">Commentaires</h3>
+                <p className="text-3xl font-bold">
+                  {platformStats.comments}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow p-6 text-center">
+                <h3 className="text-gray-500">Vues</h3>
+                <p className="text-3xl font-bold">
+                  {platformStats.views}
+                </p>
+              </div>
+
+            </div>
+          </div>
+        );
+
       case "audit":
         return <AuditLogs />;
 
@@ -238,6 +323,19 @@ const AdminDashboard: React.FC<{ admin?: boolean }> = ({ admin = false }) => {
           >
             {t('subscriptions', language)}
           </button>
+          
+          <button
+            type="button"
+            onClick={() => setActiveTab("statistics")}
+            className={`flex items-center text-sm gap-2 px-6 py-2 rounded-full transition-all ${
+              activeTab === "statistics"
+                ? "bg-[#E6EEF7] text-[#474747]"
+                : "text-[#A8A8A8] hover:bg-gray-100/30"
+            }`}
+          >
+            Statistics
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveTab("audit")}
