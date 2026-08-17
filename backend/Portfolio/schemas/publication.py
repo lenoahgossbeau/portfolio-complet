@@ -33,7 +33,8 @@ class PublicationBase(BaseModel):
 
 class PublicationCreate(PublicationBase):
     """Schéma utilisé pour créer une publication."""
-    pass
+    
+    profile_id: int  # ✅ Ajout du champ requis pour lier au chercheur
 
 class PublicationUpdate(BaseModel):
     year: Optional[int] = Field(None, ge=1900, le=2100)

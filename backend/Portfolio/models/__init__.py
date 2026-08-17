@@ -10,11 +10,14 @@ from .academic_career import AcademicCareer
 from .distinction import Distinction
 from .cours import Cours
 from .media_artefact import MediaArtefact
+from .like import Like
+from .favorite import Favorite
 from .comment import Comment
 from .message_contact import MessageContact
 from .audit import Audit
 from .subscription import Subscription
 from .refresh_token import RefreshToken
+from .payment import Payment
 
 __all__ = [
     'User',
@@ -25,9 +28,12 @@ __all__ = [
     'Distinction',
     'Cours',
     'MediaArtefact',
+    'Like',
+    'Favorite',
     'Comment',
     'MessageContact',
     'Audit',
     'Subscription',
-    'RefreshToken'
+    'RefreshToken',
+    'Payment'
 ]

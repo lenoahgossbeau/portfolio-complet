@@ -84,6 +84,13 @@ class Profile(Base):
         cascade="all, delete-orphan"
     )
 
+    # ✅ AJOUT DE LA RELATION PAYMENTS
+    payments = relationship(
+        "Payment",
+        back_populates="profile",
+        cascade="all, delete-orphan"
+    )
+
     subscription = relationship(
         "Subscription",
         uselist=False,

@@ -362,9 +362,13 @@ def get_user_details(
         "email": user.email,
         "role": user.role,
         "status": user.status,
+        # ✅ AJOUT DE is_published
+        "is_published": user.is_published,
         "profile": {
             "first_name": user.profile.first_name if user.profile else None,
             "last_name": user.profile.last_name if user.profile else None,
+            # ✅ AJOUT DE GENDER
+            "gender": getattr(user.profile, "gender", None) if user.profile else None,
             "grade": user.profile.grade if user.profile else None,
             "specialite": getattr(user.profile, "specialite", None) if user.profile else None,
             "diplome": getattr(user.profile, "diplome", None) if user.profile else None,
@@ -379,6 +383,9 @@ def get_user_details(
         } if user.profile else None,
         "project_count": len(user.profile.projects) if user.profile else 0,
         "publication_count": len(user.profile.publications) if user.profile else 0,
+        "course_count": len(user.profile.cours) if user.profile else 0,
+        "distinction_count": len(user.profile.distinctions) if user.profile else 0,
+        "media_count": len(user.profile.media_artefacts) if user.profile else 0,
         "cv_url": user.profile.cv_url if user.profile else None,
         "projects": [
             {
@@ -401,6 +408,33 @@ def get_user_details(
                 "coauthor": publication.coauthor,
             }
             for publication in (user.profile.publications if user.profile else [])
+        ],
+        "cours": [
+            {
+                "id": cours.id,
+                "title": cours.title,
+                "description": cours.description,
+                "curricula": cours.curricula,
+            }
+            for cours in (user.profile.cours if user.profile else [])
+        ],
+        "distinctions": [
+            {
+                "id": distinction.id,
+                "year": distinction.year,
+                "title": distinction.title,
+                "description": distinction.description,
+            }
+            for distinction in (user.profile.distinctions if user.profile else [])
+        ],
+        "media_artefacts": [
+            {
+                "id": media.id,
+                "name": media.name,
+                "url": media.url,
+                "description": media.description,
+            }
+            for media in (user.profile.media_artefacts if user.profile else [])
         ],
         "academic_careers": [
             {
@@ -720,4 +754,65 @@ def change_user_status(
         "user_id": user.id,
         "status": user.status,
         "is_active": user.is_active
+    }
+
+# ======================
+# PUBLIER / DÉPUBLIER LE PROFIL DU CHERCHEUR
+# ======================
+@admin_users_router.put("/{user_id}/publication")
+def change_user_publication(
+    user_id: int,
+    published: bool,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Vérification des droits administrateur
+    if current_user.role not in ["admin", "super_admin"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux administrateurs"
+        )
+
+    # Rechercher l'utilisateur
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Utilisateur non trouvé"
+        )
+
+    # Cette action concerne uniquement les chercheurs
+    if user.role != "researcher":
+        raise HTTPException(
+            status_code=400,
+            detail="Seuls les chercheurs peuvent être publiés"
+        )
+
+    # Modifier uniquement l'état de publication
+    user.is_published = published
+
+    # Audit
+    audit_log = Audit(
+        user_id=current_user.id,
+        user_role=current_user.role,
+        action_description=(
+            f"{'Publication' if published else 'Dépublication'} "
+            f"du profil du chercheur {user.email} (ID: {user.id})"
+        ),
+        date=datetime.now(timezone.utc)
+    )
+
+    db.add(audit_log)
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": (
+            "Profil publié avec succès"
+            if published
+            else "Profil dépublié avec succès"
+        ),
+        "user_id": user.id,
+        "is_published": user.is_published
     }

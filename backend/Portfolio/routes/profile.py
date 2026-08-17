@@ -201,6 +201,48 @@ def get_my_profile(
         "github": profile.github
     }
 
+# ================== LIRE UN PROFIL PAR USER ID (ADMIN) ==================
+@router.get("/user/{user_id}", response_model=ProfileOut)
+def get_profile_by_user_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in ["admin", "super_admin"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Accès refusé"
+        )
+
+    profile = db.query(Profile).filter(
+        Profile.user_id == user_id
+    ).first()
+
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail="Profil non trouvé ❌"
+        )
+
+    return {
+        "id": profile.id,
+        "user_id": profile.user_id,
+        "first_name": profile.first_name,
+        "last_name": profile.last_name,
+        "gender": profile.gender,
+        "grade": profile.grade,
+        "specialite": profile.specialite,
+        "diplome": profile.diplome,
+        "description": profile.description,
+        "bio": profile.bio,
+        "avatar": profile.profile_picture,
+        "email": profile.email,
+        "linkedin": profile.linkedin,
+        "whatsapp": profile.whatsapp,
+        "twitter": profile.twitter,
+        "github": profile.github
+    }
+
 # ================== LIRE UN PROFIL PAR ID ==================
 @router.get("/{profile_id}", response_model=ProfileOut)
 def get_profile(
@@ -208,16 +250,23 @@ def get_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # ✅ CORRECTION PRINCIPALE :
-    # Le frontend envoie profile.id (pas user.id)
-    # On cherche toujours par Profile.id
+    """
+    Lire un profil.
+
+    - Admin : le frontend du dashboard admin envoie le USER ID.
+    - Chercheur : accès uniquement à son propre profil.
+    """
+
     if current_user.role in ["admin", "super_admin"]:
-        # Admin : accès à tous les profils par profile.id
+
+        # Dans le dashboard admin, l'ID envoyé est le USER ID.
         profile = db.query(Profile).filter(
-            Profile.id == profile_id
+            Profile.user_id == profile_id
         ).first()
+
     else:
-        # Chercheur : accès uniquement à son propre profil
+
+        # Un chercheur ne peut consulter que son propre profil.
         profile = db.query(Profile).filter(
             Profile.id == profile_id,
             Profile.user_id == current_user.id

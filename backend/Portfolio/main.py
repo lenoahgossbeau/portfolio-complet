@@ -72,12 +72,15 @@ try:
     from routes.favorite import router as favorite_router
     from routes.statistics import router as statistics_router
     from routes.admin_statistics import router as admin_statistics_router
+    from routes.admin_publications import admin_publications_router
     from routes.researcher_dashboard import router as researcher_dashboard_router
     from routes.contact import router as contact_router
     from auth.router import router as auth_router
     from routes.admin import admin_router
     from routes.admin_users import admin_users_router
     from routes.cours import router as cours_router
+    from routes.media import router as media_router
+    from routes.distinctions import router as distinctions_router
     from routes.dashboard import router as dashboard_router
     from routes.pdf import router as pdf_router
     from routes.project import router as project_router
@@ -141,8 +144,9 @@ try:
             "https://portfolio-frontend-jlq1.onrender.com",
         ],
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "Accept"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["Content-Disposition"],   # ← AJOUTER CETTE LIGNE
     )
 
     # ===================== INIT DB =====================
@@ -202,7 +206,7 @@ try:
         return response
 
     # ===================== RATE LIMIT =====================
-    RATE_LIMIT = 100
+    RATE_LIMIT = 300
     WINDOW = 60
     requests_counter = defaultdict(list)
 
@@ -214,6 +218,15 @@ try:
 
     @app.middleware("http")
     async def rate_limiter(request: Request, call_next):
+        # -------------------------------------------------
+        # 1. Ignorer les requêtes OPTIONS (CORS preflight)
+        # -------------------------------------------------
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        # -------------------------------------------------
+        # 2. Paths publics (exemptés)
+        # -------------------------------------------------
         public_paths = [
             "/", "/about", "/contact", "/legal", "/privacy",
             "/portfolio", "/publications", "/distinctions",
@@ -226,38 +239,71 @@ try:
         if request.url.path in public_paths:
             return await call_next(request)
 
-        ip = request.headers.get("X-Forwarded-For", request.client.host)
+        # -------------------------------------------------
+        # 3. Identification du client
+        # -------------------------------------------------
+        ip = request.headers.get(
+            "X-Forwarded-For",
+            request.client.host if request.client else "unknown"
+        )
+
+        # -------------------------------------------------
+        # 4. Nettoyage des anciennes requêtes
+        # -------------------------------------------------
         now = time.time()
 
         if ip in requests_counter:
-            requests_counter[ip] = [t for t in requests_counter[ip] if now - t < WINDOW]
+            requests_counter[ip] = [
+                timestamp
+                for timestamp in requests_counter[ip]
+                if now - timestamp < WINDOW
+            ]
 
-        if ip in requests_counter and len(requests_counter[ip]) >= RATE_LIMIT:
+        # -------------------------------------------------
+        # 5. Vérification de la limite
+        # -------------------------------------------------
+        if len(requests_counter.get(ip, [])) >= RATE_LIMIT:
             return JSONResponse(
                 status_code=429,
                 content={
                     "error": "Trop de requêtes",
-                    "message": f"Limite de {RATE_LIMIT} requêtes par {WINDOW} secondes atteinte",
-                    "retry_after": WINDOW
+                    "message": (
+                        f"Limite de {RATE_LIMIT} requêtes "
+                        f"par {WINDOW} secondes atteinte"
+                    ),
+                    "retry_after": WINDOW,
                 },
                 headers={
                     "Retry-After": str(WINDOW),
                     "X-RateLimit-Limit": str(RATE_LIMIT),
                     "X-RateLimit-Remaining": "0",
-                    "X-RateLimit-Reset": str(int(now + WINDOW))
-                }
+                    "X-RateLimit-Reset": str(int(now + WINDOW)),
+                },
             )
 
-        if ip not in requests_counter:
-            requests_counter[ip] = []
-        requests_counter[ip].append(now)
+        # -------------------------------------------------
+        # 6. Enregistrer la requête
+        # -------------------------------------------------
+        requests_counter.setdefault(ip, []).append(now)
 
+        # -------------------------------------------------
+        # 7. Exécuter la requête
+        # -------------------------------------------------
         response = await call_next(request)
 
-        remaining = RATE_LIMIT - len(requests_counter[ip])
+        # -------------------------------------------------
+        # 8. Headers informatifs
+        # -------------------------------------------------
+        remaining = max(
+            0,
+            RATE_LIMIT - len(requests_counter.get(ip, []))
+        )
+
         response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT)
-        response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
-        response.headers["X-RateLimit-Reset"] = str(int(now + WINDOW))
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(
+            int(now + WINDOW)
+        )
 
         return response
 
@@ -270,11 +316,14 @@ try:
     app.include_router(favorite_router)
     app.include_router(statistics_router)
     app.include_router(admin_statistics_router)
+    app.include_router(admin_publications_router)
     app.include_router(researcher_dashboard_router)
     app.include_router(project_router, prefix="/projects", tags=["Projects"])
     app.include_router(admin_router)
     app.include_router(admin_users_router, tags=["Admin Users"])
     app.include_router(cours_router)
+    app.include_router(media_router)
+    app.include_router(distinctions_router)
     app.include_router(dashboard_router)
     app.include_router(pdf_router)
     app.include_router(public_test_router, prefix="/api/public", tags=["Public Test"])
@@ -817,7 +866,7 @@ try:
             status_code=429,
             content={
                 "error": "Trop de requêtes",
-                "message": "Limite de 100 requêtes par minute atteinte.",
+                "message": "Limite de 300 requêtes par minute atteinte.",
                 "retry_after": 60
             }
         )

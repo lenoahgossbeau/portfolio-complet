@@ -14,6 +14,9 @@ class User(Base):
     status = Column(String(20), default="inactive", nullable=False, index=True)
     is_active = Column(Boolean, default=False, nullable=False)
 
+    # ✅ Publication du profil par l'administrateur
+    is_published = Column(Boolean, default=False, nullable=False)
+
     activation_code = Column(String(100), nullable=True)
     slug = Column(String(100), unique=True, nullable=True)  # 👈 AJOUT POUR SOUS-DOMAINE
 
