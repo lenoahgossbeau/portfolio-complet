@@ -1,87 +1,152 @@
-import React from 'react'
-import Image from 'next/image'
+import React from "react";
+import Image from "next/image";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
-
+import { API_BASE_URL } from "@/lib/api";
+import { useLanguage } from "@/hooks/useLanguage";
+import { t } from "@/locales/translations";
 
 interface PublicationCardProps {
-  editable?: boolean; // THIS CONTROLS VISIBILITY
+  editable?: boolean;
   data: {
     id: number;
+    image?: string;
     date: string;
     title: string;
     description: string;
     author: string[];
+    journal?: string;
+    doi?: string;
     link: string;
   };
-  onEdit?: (data: any) => void  //when edit button is pressed
-  onDelete?: (id: number) => void
+  onEdit?: (data: any) => void;
+  onDelete?: (id: number) => void;
 }
 
+export default function PublicationCard({
+  editable = false,
+  data,
+  onEdit,
+  onDelete,
+}: PublicationCardProps) {
+  const { language } = useLanguage();
+  const langKey = language.toLowerCase();
 
-export default function PublicationCard({ editable = false, data, onEdit, onDelete }: PublicationCardProps) {
+  const imageSrc =
+    data.image && data.image.trim() !== ""
+      ? `${API_BASE_URL}${data.image}`
+      : "/favicon.ico";
+
   return (
-  <div  className="relative bg-white rounded-xl overflow-hidden shadow-md border border-gray-200 p-6 ">
-    <div>
-      <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">
-        {data.title}
-      </h3>
+    <div
+      onClick={() => onEdit ? onEdit(data) : null}
+      className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 transition hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+    >
 
+      {/* IMAGE */}
+      <div className="relative h-64 w-full overflow-hidden">
+        <Image
+          src={imageSrc}
+          alt={data.title}
+          fill
+          className="object-cover object-center transition-transform duration-300 hover:scale-105"
+          unoptimized
+        />
 
-      {/* EDIT / DELETE ICONS */}
-      {editable && (
-        <div className="absolute right-0 top-12 bg-white rounded-bl-xl rounded-tl-xl shadow-md flex flex-col items-center overflow-hidden">
-                      
-            {/* EDIT */}
-          <button onClick={() => onEdit?.(data)} className="cursor-pointer p-2 hover:bg-gray-100 transition">
-            <FiEdit2 className="text-gray-600" />
-          </button>
-    
-            {/* DELETE */}
-          <button onClick={() => onDelete?.(data.id)} className="cursor-pointer p-2 hover:bg-red-100 transition">
-            <FiTrash2 className="text-red-600" />
-          </button>
-        </div>
-      )}
+        {/* YEAR */}
+        <span className="absolute top-0 right-0 bg-[#003F7F] text-white px-4 py-2 rounded-bl-xl font-semibold">
+          {data.date}
+        </span>
 
+        {/* ACTIONS */}
+        {editable && (
+          <div className="absolute top-14 right-0 bg-white rounded-l-xl shadow-md flex flex-col overflow-hidden">
 
-      <p className="text-sm text-gray-600 leading-relaxed italic">
-        
-        {data.description}
-        
-      </p>
-    </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(data);
+              }}
+              className="p-3 hover:bg-gray-100 transition"
+            >
+              <FiEdit2 />
+            </button>
 
-    
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(data.id);
+              }}
+              className="p-3 hover:bg-red-100 text-red-600 transition"
+            >
+              <FiTrash2 />
+            </button>
 
-    <div className="mt-6 space-y-1 text-sm text-gray-700">
-      <p>
-        <span className="italic">Author:</span> <strong> {data.author.join(", ")} </strong>
-      </p>
-      <p>
-        <span className="italic">Published:</span> <strong> {data.date} </strong>
-      </p>
-    </div>
-  </div>
-  );
-} 
+          </div>
+        )}
+      </div>
 
+      {/* CONTENT */}
+      <div className="p-5">
 
-<div className='bg-white  rounded-xl shadow-md overflow-hidden max-w-sm'>
-        <div className='relative h-[200px] bg-gray-300'>
-            <span className='absolute top-0 right-0 bg-[#1F3A5F] text-white text-sm px-3 py-[6px] rounded-bl-xl'>
-              Date
-            </span>
-        </div>
+        <h3 className="font-bold text-lg text-gray-900 leading-6 line-clamp-2 min-h-[3rem]">
+          {data.title}
+        </h3>
 
-        <div className='p-5'>
-          <h3 className='font-semibold text-lg mb-2'>Title</h3>
-          <p className='text-gray-600 text-sm leading-relaxed'>
-            Description details here A passionate software
-            engineer specializing in building modern, 
-            responsive, and user-friendly web solutions.
-            A passionate software engineer specializing in 
-            building modern, responsive, and user-friendly 
-            web solutions.
+        <p className="mt-3 text-sm text-gray-500 italic leading-6 line-clamp-3 min-h-[4.5rem]">
+          {data.description}
+        </p>
+
+        <div className="mt-5 border-t pt-4 text-sm text-gray-700 space-y-2">
+
+          <p>
+            <span className="text-gray-500 font-medium">
+              {t("authors", langKey)}
+            </span>{" "}
+            {data.author.join(", ")}
           </p>
+
+          {data.journal && (
+            <p>
+              <span className="text-gray-500 font-medium">
+                {t("journal", langKey)}
+              </span>{" "}
+              {data.journal}
+            </p>
+          )}
+
+          {data.doi && (
+            <div>
+              <span className="text-gray-500 font-medium">DOI</span>
+
+              <a
+                href={data.doi}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-blue-600 hover:underline"
+                title={data.doi}
+              >
+                {data.doi}
+              </a>
+            </div>
+          )}
+
+          {data.link && (
+            <a
+              href={data.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center mt-4 px-4 py-2 rounded-lg bg-[#003F7F] text-white text-sm font-medium hover:bg-[#0051a8] transition"
+            >
+              {t("view_publication", langKey)}
+            </a>
+          )}
+
         </div>
+
+      </div>
+
     </div>
+  );
+}

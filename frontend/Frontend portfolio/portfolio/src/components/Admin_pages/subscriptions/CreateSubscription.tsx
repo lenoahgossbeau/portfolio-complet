@@ -149,12 +149,33 @@ export default function CreateSubscription({ onSubscriptionCreated }: Props) {
                 </label>
                 <select
                   value={formData.payment_method}
-                  onChange={(e) => setFormData({...formData, payment_method: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      payment_method: e.target.value
+                    })
+                  }
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="Carte bancaire">{t('credit_card', language)}</option>
-                  <option value="PayPal">{t('paypal', language)}</option>
-                  <option value="Virement">{t('bank_transfer', language)}</option>
+                  <option value="Carte bancaire">
+                    {t('credit_card', language)}
+                  </option>
+
+                  <option value="PayPal">
+                    {t('paypal', language)}
+                  </option>
+
+                  <option value="Virement">
+                    {t('bank_transfer', language)}
+                  </option>
+
+                  <option value="Orange Money">
+                    Orange Money
+                  </option>
+
+                  <option value="MTN Money">
+                    MTN Money
+                  </option>
                 </select>
               </div>
 

@@ -48,7 +48,7 @@ export default function SubscriptionPieChart({ subscriptions }: Props) {
     maintainAspectRatio: true,
     plugins: {
       legend: { position: 'top' as const },
-      title: { display: true, text: t('subscription_by_type', language) || 'Répartition par type' },
+      title: { display: true, text: t('subscription_by_type', language) },
       tooltip: { callbacks: { label: (ctx: any) => `${ctx.label}: ${ctx.raw} (${((ctx.raw / subscriptions.length) * 100).toFixed(1)}%)` } }
     },
   };

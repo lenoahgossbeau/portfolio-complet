@@ -49,7 +49,7 @@ const AdminDashboard: React.FC = ({ admin = false }:{ admin?: boolean}) => {
 
   const stats = useMemo(() => {
     const total = subscriptions.length;
-    const revenue = subscriptions.reduce((sum, s) => sum + s.amount, 0);
+    const revenue = subscriptions.reduce((sum, s) => sum + (s.amount ?? 0), 0);
     const renewalRate = 100;
     return { total, revenue, renewalRate };
   }, [subscriptions]);
@@ -141,7 +141,7 @@ const AdminDashboard: React.FC = ({ admin = false }:{ admin?: boolean}) => {
         {/* Admin publish Button */}
         {admin && (
           <button
-            onClick={() => alert("Published")}
+            onClick={() => alert(t("published", language))}
             className="cursor-pointer flex p-2 text-sm px-3 rounded-lg gap-2 items-center bg-[#003F7F] text-white"
           >
             <FiUpload size={17} />

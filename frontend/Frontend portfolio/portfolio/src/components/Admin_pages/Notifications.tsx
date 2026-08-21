@@ -47,7 +47,7 @@ export default function Notifications({ subscriptions }: Props) {
       {showNotifications && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
           <div className="p-3 border-b bg-gray-50 rounded-t-lg">
-            <h3 className="font-semibold">{t('notifications', language) || 'Notifications'}</h3>
+            <h3 className="font-semibold">{t('notifications', language)}</h3>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {expiringSoon.map(sub => (

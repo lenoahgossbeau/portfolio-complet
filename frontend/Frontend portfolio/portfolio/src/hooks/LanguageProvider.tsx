@@ -3,31 +3,36 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 type LanguageContextType = {
   language: string;
-  changeLanguage: (lang: string) => void;
+  setLanguage: (lang: string) => void;
 };
 
 export const LanguageContext = createContext<LanguageContextType>({
-  language: 'EN',
-  changeLanguage: () => {},
+  language: 'fr',
+  setLanguage: () => {},
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState('EN');
+  const [language, setLanguage] = useState('fr');
 
   useEffect(() => {
     const savedLang = localStorage.getItem('language');
-    if (savedLang === 'EN' || savedLang === 'FR') {
+    if (savedLang === 'fr' || savedLang === 'en') {
       setLanguage(savedLang);
     }
   }, []);
 
-  const changeLanguage = (lang: string) => {
+  const setAppLanguage = (lang: string) => {
     setLanguage(lang);
     localStorage.setItem('language', lang);
   };
 
   return (
-    <LanguageContext.Provider value={{ language, changeLanguage }}>
+    <LanguageContext.Provider
+      value={{
+        language,
+        setLanguage: setAppLanguage,
+      }}
+    >
       {children}
     </LanguageContext.Provider>
   );

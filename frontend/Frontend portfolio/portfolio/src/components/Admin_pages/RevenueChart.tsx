@@ -19,7 +19,8 @@ export default function RevenueChart({ subscriptions }: Props) {
   subscriptions.forEach(sub => {
     const date = new Date(sub.start_date);
     const monthKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
-    revenuesByMonth[monthKey] = (revenuesByMonth[monthKey] || 0) + 29.99;
+    revenuesByMonth[monthKey] =
+      (revenuesByMonth[monthKey] || 0) + Number(sub.amount || 0);
   });
 
   // Ajouter les 6 derniers mois même sans données

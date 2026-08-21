@@ -23,3 +23,20 @@ env/
 .DS_Store
 *.log
 coverage/
+
+# Sauvegardes temporaires
+*_AVANT_SYNCHRONISATION/
+*.bak
+resume_diff.txt
+
+# Fichiers et dossiers locaux temporaires
+Portfolio-Complet/
+backup/
+backend/Portfolio/backend_tree.txt
+backend/Portfolio/qc
+backend/Portfolio/query
+
+# Fichiers de test locaux du frontend
+frontend/Frontend portfolio/portfolio/test-import/
+frontend/Frontend portfolio/portfolio/test_publications.json
+frontend/Frontend portfolio/portfolio/src/components/Admin_pages/*.backup

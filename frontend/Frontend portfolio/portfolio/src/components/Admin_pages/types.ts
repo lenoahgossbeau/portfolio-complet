@@ -5,4 +5,5 @@ export interface Subscription {
   end_date: string;
   type: string;
   payment_method: string;
+  amount?: number;
 }

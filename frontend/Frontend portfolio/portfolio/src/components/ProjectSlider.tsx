@@ -105,10 +105,11 @@ export default function ProjectSlider(
           {projects.map((proj) => (
             <div key={proj.id} className="px-2">
               <ProjectCard 
-                editable = {editable}
-                data = {proj}
-                onEdit = {onEdit}
-                onDelete = {onDelete}
+                editable={editable}
+                language={language}
+                data={proj}
+                onEdit={onEdit}
+                onDelete={onDelete}
               />
             </div>
           ))}
@@ -118,10 +119,11 @@ export default function ProjectSlider(
           {projects.map((proj) => (
             <ProjectCard 
               key={proj.id} 
-              editable = {editable}
-              data = {proj}
-              onEdit = {onEdit}
-              onDelete = {onDelete} 
+              editable={editable}
+              language={language}
+              data={proj}
+              onEdit={onEdit}
+              onDelete={onDelete} 
             />
           ))}
         </div>

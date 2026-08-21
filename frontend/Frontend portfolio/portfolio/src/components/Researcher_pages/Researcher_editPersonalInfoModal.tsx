@@ -1,252 +1,176 @@
-<<<<<<< HEAD
-import Modal from "@/components/Modal_structure_Researcher_profile";
-import { useEffect, useState } from "react";
-
-export default function EditPersonalInfoModal({ open, onClose, data, onSave }: any) {
-  
-  const [form, setForm] = useState(data);
-  
-  
-  
-  ////////////// Validation state /////////////
-=======
 'use client';
+
 import Modal from "@/components/Modal_structure_Researcher_profile";
 import { useEffect, useState } from "react";
-import { useLanguage } from '@/hooks/useLanguage';
-import { t } from '@/locales/translations';
-import { API_BASE_URL } from '@/lib/api';
-import toast from 'react-hot-toast';
+import { useLanguage } from "@/hooks/useLanguage";
+import { t } from "@/locales/translations";
+import { API_BASE_URL } from "@/lib/api";
+import toast from "react-hot-toast";
 
-export default function EditPersonalInfoModal({ open, onClose, data, onSave }: any) {
+type Profile = {
+  first_name: string;
+  last_name: string;
+
+  gender: string;
+  grade: string;
+  specialite: string;
+  diplome: string;
+
+  description: string;
+  bio: string;
+
+  avatar: string;
+
+  email: string;
+  linkedin: string;
+  whatsapp: string;
+  twitter: string;
+  github: string;
+};
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  data: Profile;
+  onSave: (profile: Profile) => Promise<void>;
+};
+
+export default function EditPersonalInfoModal({
+  open,
+  onClose,
+  data,
+  onSave,
+}: Props) {
   const { language } = useLanguage();
-  const [form, setForm] = useState(data);
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
+
+  const [form, setForm] = useState<Profile>(data);
+
   const [errors, setErrors] = useState({
-    name: "",
-    profession: "",
-    about: "",
+    first_name: "",
+    last_name: "",
+    grade: "",
   });
-  
-<<<<<<< HEAD
-  
-  ////////////// image /////////////////
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState(data.avatar);
 
-
-///////////////////// reinitialise state
-=======
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState(data.avatar);
+  const [imagePreview, setImagePreview] = useState(data?.avatar || "");
   const [uploading, setUploading] = useState(false);
 
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
   useEffect(() => {
     setForm(data);
-    setImagePreview(data.avatar);
+    setImagePreview(data?.avatar || "");
+    setImageFile(null);
   }, [data]);
-<<<<<<< HEAD
-////////////////////
-
-
-  ///////////// Validation Function ///////////
-  const validate = () => {
-    const newErrors: any = {};
-
-    if (!form.name.trim()) newErrors.name = "Name is required";
-    if (!form.profession.trim()) newErrors.profession = "Profession is required";
-    if (!form.about.trim()) newErrors.about = "About section is required";
-=======
 
   const validate = () => {
-    const newErrors: any = {};
+    const newErrors = {
+      first_name: "",
+      last_name: "",
+      grade: "",
+    };
 
-    if (!form.name.trim()) newErrors.name = t('name_required', language);
-    if (!form.profession.trim()) newErrors.profession = t('profession_required', language);
-    if (!form.about.trim()) newErrors.about = t('about_required', language);
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
+    if (!form.first_name.trim()) {
+      newErrors.first_name = t("first_name_required", language);
+    }
+
+    if (!form.last_name.trim()) {
+      newErrors.last_name = t("last_name_required", language);
+    }
+
+    if (!form.grade.trim()) {
+      newErrors.grade = t("grade_required", language);
+    }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+
+    return (
+      !newErrors.first_name &&
+      !newErrors.last_name &&
+      !newErrors.grade
+    );
   };
 
-<<<<<<< HEAD
+  const update = (key: keyof Profile, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
 
-
-=======
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
-  const update = (key: string, value: string) => {
-    setForm((prev: any) => ({ ...prev, [key]: value }));
-    setErrors((prev) => ({ ...prev, [key]: "" }));
+    if (
+      key === "first_name" ||
+      key === "last_name" ||
+      key === "grade"
+    ) {
+      setErrors((prev) => ({
+        ...prev,
+        [key]: "",
+      }));
+    }
   };
 
-<<<<<<< HEAD
-
-  ///////////////////// image change handler ////////////
-=======
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
-<<<<<<< HEAD
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-
-  const handleSave = () => {
-    if (!validate()) return;
-
-    onSave({
-      ...form,
-      avatar: imagePreview, // backend will replace this later
-    });
-
-    onClose();
-  };
-
-
-  return (
-    <Modal open={open} onClose={onClose}>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Personal info</h3>
-        <button
-          onClick={handleSave}
-          className="text-blue-600 font-medium"
-        >
-          Save
-        </button>
-      </div>
-
-
-      {/* Image Upload */}
-      <div className="flex justify-center mb-6">
-        <label className="cursor-pointer">
-          <img
-            src={imagePreview || "/favicon.ico"} ///////////////////////// default image is the favicon for now //////////////////////
-            className="w-48 h-48 rounded-full object-cover"
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-        </label>
-      </div>
-
-
-      {/* Avatar 
-      <div className="flex justify-center mb-6">
-        <img
-          src={form.avatar}
-          className="w-28 h-28 rounded-full object-cover"
-        />
-      </div>*/}
-
-
-      {/* Inputs */}
-      <div className="space-y-4">
-        <div>
-            <input
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            className={`w-full border-b focus:border-blue-600 outline-none
-            ${
-              errors.name
-                ? "border-red-600 outline-none"
-                : ""
-            }`}
-            />
-
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-        </div>
-
-
-        <div>
-            <input
-            placeholder="Profession"
-            value={form.profession}
-            onChange={(e) => update("profession", e.target.value)}
-            className={`w-full border-b focus:border-blue-600 outline-none
-            ${
-              errors.profession
-                ? "border-red-600 outline-none"
-                : ""
-            }`}
-            />
-            
-            {errors.profession && <p className="text-red-500 text-sm">{errors.profession}</p>}
-        </div>
-
-
-        <div>
-            <textarea
-            placeholder="About you"
-            value={form.about}
-            onChange={(e) => update("about", e.target.value)}
-            className={`w-full border rounded-lg p-2 resize-none focus:border-blue-600 outline-none
-            ${
-              errors.about
-                ? "border-red-600 outline-none"
-                : ""
-            }`}
-
-            rows={4}
-            />
-
-            {errors.about && <p className="text-red-500 text-sm">{errors.about}</p>}
-=======
-    // Vérifier que c'est une image
-    if (!file.type.startsWith('image/')) {
-      toast.error('Seuls les fichiers image sont acceptés');
+    if (!file.type.startsWith("image/")) {
+      toast.error("Seuls les fichiers image sont acceptés");
       return;
     }
 
-    // Vérifier la taille (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('L\'image ne doit pas dépasser 2MB');
+      toast.error("L'image ne doit pas dépasser 2MB");
       return;
     }
 
     setImageFile(file);
-    // Créer un nouvel URL pour l'aperçu
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
+
+    const preview = URL.createObjectURL(file);
+
+    setImagePreview(preview);
   };
 
-  const uploadImage = async (file: File): Promise<string | null> => {
-    const token = localStorage.getItem('access_token');
+  const uploadImage = async (
+    file: File
+  ): Promise<string | null> => {
+    const token = localStorage.getItem("access_token");
+
     if (!token) {
-      toast.error('Vous devez être connecté');
+      toast.error("Vous devez être connecté");
       return null;
     }
 
     const formData = new FormData();
-    formData.append('file', file);
+
+    formData.append("file", file);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/profiles/upload-photo`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/profiles/upload-photo`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
-      const data = await response.json();
-      if (response.ok && data.success) {
-        return data.photo_url;
-      } else {
-        toast.error(data.detail || 'Erreur lors du téléchargement de la photo');
-        return null;
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        return result.photo_url;
       }
-    } catch (error) {
-      toast.error('Erreur réseau');
+
+      toast.error(
+        result.detail ??
+          t("download_error", language)
+      );
+
+      return null;
+    } catch {
+      toast.error(t("network_error", language));
       return null;
     }
   };
@@ -255,101 +179,252 @@ export default function EditPersonalInfoModal({ open, onClose, data, onSave }: a
     if (!validate()) return;
 
     setUploading(true);
-    let avatarUrl = form.avatar;
 
-    // Si une nouvelle image a été sélectionnée, l'uploader
-    if (imageFile) {
-      const uploadedUrl = await uploadImage(imageFile);
-      if (uploadedUrl) {
-        avatarUrl = uploadedUrl;
-        // Mettre à jour l'aperçu avec l'URL finale
-        setImagePreview(uploadedUrl);
-      } else {
-        setUploading(false);
-        return;
+    try {
+      let avatarUrl = form.avatar;
+
+      if (imageFile) {
+        const uploaded = await uploadImage(imageFile);
+
+        if (!uploaded) {
+          setUploading(false);
+          return;
+        }
+
+        avatarUrl = uploaded;
       }
-    }
 
-    // Sauvegarder le profil avec la nouvelle URL de l'avatar
-    const updatedProfile = { ...form, avatar: avatarUrl };
-    await onSave(updatedProfile);
-    onClose();
-    setUploading(false);
+      await onSave({
+        ...form,
+        avatar: avatarUrl,
+      });
+
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error(t("save_error", language));
+    } finally {
+      setUploading(false);
+    }
   };
+
+  if (!form) {
+    return null;
+  }
 
   return (
     <Modal open={open} onClose={onClose}>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">{t('personal_info', language)}</h3>
-        <button 
-          onClick={handleSave} 
+        <h3 className="text-lg font-semibold">
+          {t("personal_info", language)}
+        </h3>
+
+        <button
+          type="button"
+          onClick={handleSave}
           disabled={uploading}
-          className={`text-blue-600 font-medium ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`text-blue-600 font-medium ${
+            uploading
+              ? "opacity-50 cursor-not-allowed"
+              : ""
+          }`}
         >
-          {uploading ? 'Upload...' : t('save', language)}
+          {uploading
+            ? t("downloading", language)
+            : t("save", language)}
         </button>
       </div>
 
       <div className="flex justify-center mb-6">
         <label className="cursor-pointer">
-          <img 
-            key={imagePreview || "default"}
-            src={imagePreview || "/favicon.ico"} 
-            className="w-48 h-48 rounded-full object-cover border-2 border-gray-200" 
+          <img
+            src={imagePreview || "/favicon.ico"}
+            className="w-44 h-44 rounded-full object-cover border-2 border-gray-200"
             alt="Profile"
             onError={(e) => {
               e.currentTarget.src = "/favicon.ico";
             }}
           />
-          <input 
-            type="file" 
-            accept="image/*" 
-            onChange={handleImageChange} 
-            className="hidden" 
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
           />
-          <p className="text-center text-xs text-gray-500 mt-1">
-            {language === 'fr' ? 'Cliquez pour changer la photo' : 'Click to change photo'}
+
+          <p className="text-center text-xs text-gray-500 mt-2">
+            {language === "fr"
+              ? "Cliquez pour changer la photo"
+              : "Click to change photo"}
           </p>
         </label>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+
         <div>
+          <label className="text-sm font-medium">
+            {t("first_name", language)}
+          </label>
+
           <input
-            placeholder={t('name', language)}
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            className={`w-full border-b focus:border-blue-600 outline-none ${errors.name ? "border-red-600" : ""}`}
+            className="w-full border rounded-lg p-2"
+            value={form.first_name}
+            onChange={(e) =>
+              update("first_name", e.target.value)
+            }
           />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+
+          {errors.first_name && (
+            <p className="text-red-500 text-sm">
+              {errors.first_name}
+            </p>
+          )}
         </div>
 
         <div>
+          <label className="text-sm font-medium">
+            {t("last_name", language)}
+          </label>
+
           <input
-            placeholder={t('profession', language)}
-            value={form.profession}
-            onChange={(e) => update("profession", e.target.value)}
-            className={`w-full border-b focus:border-blue-600 outline-none ${errors.profession ? "border-red-600" : ""}`}
+            className="w-full border rounded-lg p-2"
+            value={form.last_name}
+            onChange={(e) =>
+              update("last_name", e.target.value)
+            }
           />
-          {errors.profession && <p className="text-red-500 text-sm">{errors.profession}</p>}
+
+          {errors.last_name && (
+            <p className="text-red-500 text-sm">
+              {errors.last_name}
+            </p>
+          )}
         </div>
 
         <div>
-          <textarea
-            placeholder={t('about_you', language)}
-            value={form.about}
-            onChange={(e) => update("about", e.target.value)}
-            className={`w-full border rounded-lg p-2 resize-none focus:border-blue-600 outline-none ${errors.about ? "border-red-600" : ""}`}
-            rows={4}
-          />
-          {errors.about && <p className="text-red-500 text-sm">{errors.about}</p>}
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
+          <label className="text-sm font-medium">
+            {t("gender", language)}
+          </label>
+
+          <select
+            className="w-full border rounded-lg p-2"
+            value={form.gender}
+            onChange={(e) =>
+              update("gender", e.target.value)
+            }
+          >
+            <option value="">
+              {language === "fr"
+                ? "Sélectionner"
+                : "Select"}
+            </option>
+
+            <option value="Male">
+              {language === "fr"
+                ? "Homme"
+                : "Male"}
+            </option>
+
+            <option value="Female">
+              {language === "fr"
+                ? "Femme"
+                : "Female"}
+            </option>
+
+            <option value="Other">
+              {language === "fr"
+                ? "Autre"
+                : "Other"}
+            </option>
+          </select>
         </div>
+
+        <div>
+          <label className="text-sm font-medium">
+            {t("grade", language)}
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-2"
+            value={form.grade}
+            onChange={(e) =>
+              update("grade", e.target.value)
+            }
+          />
+
+          {errors.grade && (
+            <p className="text-red-500 text-sm">
+              {errors.grade}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">
+            {t("specialite", language)}
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-2"
+            value={form.specialite}
+            onChange={(e) =>
+              update("specialite", e.target.value)
+            }
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">
+            {t("diplome", language)}
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-2"
+            value={form.diplome}
+            onChange={(e) =>
+              update("diplome", e.target.value)
+            }
+          />
+        </div>
+
       </div>
+
+      <div className="mt-5">
+
+        <label className="text-sm font-medium">
+          {t("description", language)}
+        </label>
+
+        <textarea
+          rows={3}
+          className="w-full border rounded-lg p-2"
+          value={form.description}
+          onChange={(e) =>
+            update("description", e.target.value)
+          }
+        />
+
+      </div>
+
+      <div className="mt-5">
+
+        <label className="text-sm font-medium">
+          {t("bio", language)}
+        </label>
+
+        <textarea
+          rows={6}
+          className="w-full border rounded-lg p-2"
+          value={form.bio}
+          onChange={(e) =>
+            update("bio", e.target.value)
+          }
+        />
+
+      </div>
+
     </Modal>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066

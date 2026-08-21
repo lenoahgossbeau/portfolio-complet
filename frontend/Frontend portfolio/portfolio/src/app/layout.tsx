@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-<<<<<<< HEAD
 import { LanguageProvider } from "@/hooks/LanguageProvider";
-=======
 import { Toaster } from "react-hot-toast";
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
 
 const inter = Inter({
   variable: "--font-inter-sans",
@@ -13,16 +10,20 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-<<<<<<< HEAD
-  title: "Portfolio",
-  description: "Portfolio dynamique pour enseignants-chercheurs",
-=======
   title: {
     default: "InchTechs - Plateforme de portfolios pour chercheurs",
     template: "%s | InchTechs",
   },
-  description: "Plateforme de portfolios pour enseignants-chercheurs. Publiez vos travaux, projets et publications.",
-  keywords: ["chercheur", "portfolio", "publications", "projets", "CV", "recherche"],
+  description:
+    "Plateforme de portfolios pour enseignants-chercheurs. Publiez vos travaux, projets et publications.",
+  keywords: [
+    "chercheur",
+    "portfolio",
+    "publications",
+    "projets",
+    "CV",
+    "recherche",
+  ],
   authors: [{ name: "Noumedem Chabifor Arnaud" }],
   openGraph: {
     title: "InchTechs",
@@ -63,7 +64,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://inchtechs.com",
   },
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
 };
 
 export default function RootLayout({
@@ -72,41 +72,36 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-<<<<<<< HEAD
-    <html lang="en">
-      <body className={`${inter.className} antialiased`}>
-        <LanguageProvider>
-          {children}
-        </LanguageProvider>
-=======
     <html lang="fr">
       <body className={`${inter.className} antialiased`}>
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-            success: {
+        <LanguageProvider>
+          <Toaster
+            position="top-right"
+            toastOptions={{
               duration: 3000,
-              iconTheme: {
-                primary: '#22c55e',
-                secondary: '#fff',
+              style: {
+                background: "#363636",
+                color: "#fff",
               },
-            },
-            error: {
-              duration: 4000,
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: "#22c55e",
+                  secondary: "#fff",
+                },
               },
-            },
-          }}
-        />
-        {children}
->>>>>>> f4845cf3085e1ea3eadeea21e1681219a592d066
+              error: {
+                duration: 4000,
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "#fff",
+                },
+              },
+            }}
+          />
+
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

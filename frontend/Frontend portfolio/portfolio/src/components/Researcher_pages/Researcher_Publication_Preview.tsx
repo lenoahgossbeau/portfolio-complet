@@ -3,6 +3,9 @@ import Slider from "react-slick";
 import { useState, useRef, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import PublicationCard from "../PublicationCard";
+import { useLanguage } from "@/hooks/useLanguage";
+import { t } from "@/locales/translations";
+import PublicationModal from "@/components/PublicationModal";
 
 function NextArrow({ onClick, show }: any) {
   if (!show) return null;
@@ -39,12 +42,27 @@ export default function Re_PublicationSlider({
   onEdit?: (data: any) => void;
   onDelete?: (id: number) => void;
 }) {
+  const { language } = useLanguage();
+  const langKey = language.toLowerCase();
 
   const sliderRef = useRef<any>(null);
 
   const [viewAll, setViewAll] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slidesToShow, setSlidesToShow] = useState(1);
+
+  const [selectedPublication, setSelectedPublication] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const openPublication = (publication: any) => {
+    setSelectedPublication(publication);
+    setModalOpen(true);
+  };
+
+  const closePublication = () => {
+    setModalOpen(false);
+    setSelectedPublication(null);
+  };
 
   const totalSlides = publications.length;
   const maxSlideIndex = Math.max(0, totalSlides - slidesToShow);
@@ -102,25 +120,28 @@ export default function Re_PublicationSlider({
         <Slider ref={sliderRef} {...settings}>
           {publications.map((pub) => (
             <div key={pub.id} className="px-2">
-              <PublicationCard 
-                editable = {editable}
-                data = {pub}
-                onEdit = {onEdit}
-                onDelete = {onDelete}
-              />
+              <div onClick={() => openPublication(pub)}>
+                <PublicationCard 
+                  editable={editable}
+                  data={pub}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              </div>
             </div>
           ))}
         </Slider>
       ) : (
         <div className="grid grid-cols-1 gap-8 overflow-y-auto scrollbar-hide max-h-[520px] px-2 py-14">
           {publications.map((pub) => (
-            <PublicationCard 
-              key={pub.id} 
-              editable = {editable}
-              data = {pub}
-              onEdit = {onEdit}
-              onDelete = {onDelete}
-            />
+            <div key={pub.id} onClick={() => openPublication(pub)}>
+              <PublicationCard 
+                editable={editable}
+                data={pub}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -135,9 +156,17 @@ export default function Re_PublicationSlider({
           }}
           className="cursor-pointer px-4 py-3 bg-[#003F7F] text-white rounded-2xl hover:bg-[#004F9F] transition"
         >
-          {viewAll ? "Show Less" : "View All "}
+          {viewAll
+            ? t("show_less", langKey)
+            : t("view_all", langKey)}
         </button>
       </div>
+
+      <PublicationModal
+        open={modalOpen}
+        onClose={closePublication}
+        publication={selectedPublication}
+      />
     </div>
   );
 }

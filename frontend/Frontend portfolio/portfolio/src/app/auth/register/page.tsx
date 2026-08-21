@@ -29,7 +29,7 @@ export default function RegisterPage() {
     setSuccess('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError(language === 'fr' ? 'Les mots de passe ne correspondent pas' : 'Passwords do not match');
+      setError(t("passwords_not_match", language));
       setLoading(false);
       return;
     }
@@ -45,27 +45,31 @@ export default function RegisterPage() {
           first_name: formData.first_name,
           last_name: formData.last_name,
           role: "researcher",
-          status: "pending"
+          status: "pending",
+          language: language
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || (language === 'fr' ? "Erreur lors de l'inscription" : "Registration error"));
+        throw new Error(
+          data.detail || t("registration_error", language)
+        );
       }
 
       // 2. Demander l'envoi de l'email d'activation
       const activationRes = await fetch(`${API_BASE_URL}/admin/users/activation-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email })
+        body: JSON.stringify({ 
+          email: formData.email,
+          language: language 
+        })
       });
 
       if (activationRes.ok) {
-        setSuccess(language === 'fr' 
-          ? '✅ Inscription réussie ! Un email d\'activation vous a été envoyé. Vérifiez votre boîte mail (et vos spams).'
-          : '✅ Registration successful! An activation email has been sent to you. Check your inbox (and spam).');
+        setSuccess(t("registration_success", language));
         
         // Vider le formulaire
         setFormData({
@@ -76,9 +80,7 @@ export default function RegisterPage() {
           last_name: ''
         });
       } else {
-        setSuccess(language === 'fr'
-          ? '✅ Inscription réussie ! Veuillez activer votre compte via le lien reçu par email.'
-          : '✅ Registration successful! Please activate your account via the link received by email.');
+        setSuccess(t("registration_success_activate", language));
       }
       
     } catch (err: any) {
@@ -111,7 +113,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-gray-700 mb-1">
-              {language === 'fr' ? 'Prénom' : 'First name'}
+              {t("first_name", language)}
             </label>
             <input
               type="text"
@@ -124,7 +126,7 @@ export default function RegisterPage() {
 
           <div>
             <label className="block text-gray-700 mb-1">
-              {language === 'fr' ? 'Nom' : 'Last name'}
+              {t("last_name", language)}
             </label>
             <input
               type="text"
@@ -163,7 +165,7 @@ export default function RegisterPage() {
 
           <div>
             <label className="block text-gray-700 mb-1">
-              {language === 'fr' ? 'Confirmer le mot de passe' : 'Confirm password'}
+              {t("confirm_password", language)}
             </label>
             <input
               type="password"
@@ -180,15 +182,15 @@ export default function RegisterPage() {
             className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
           >
             {loading 
-              ? (language === 'fr' ? 'Inscription...' : 'Registering...') 
+              ? t("registering", language)
               : t('register', language)}
           </button>
         </form>
 
         <p className="text-center text-gray-600 mt-4">
-          {language === 'fr' ? 'Déjà un compte ?' : 'Already have an account?'}{' '}
+          {t("already_have_account", language)}{' '}
           <Link href="/auth/login" className="text-blue-600 hover:underline">
-            {language === 'fr' ? 'Se connecter' : 'Login'}
+            {t("login", language)}
           </Link>
         </p>
       </div>

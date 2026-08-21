@@ -38,7 +38,7 @@ export default function NewSubscriptionsBarChart({ subscriptions }: Props) {
     labels: sortedMonths,
     datasets: [
       {
-        label: t('new_subscriptions', language) || 'Nouveaux abonnements',
+        label: t('new_subscriptions', language),
         data: counts,
         backgroundColor: 'rgba(59, 130, 246, 0.6)',
         borderColor: 'rgb(59, 130, 246)',
@@ -53,11 +53,11 @@ export default function NewSubscriptionsBarChart({ subscriptions }: Props) {
     maintainAspectRatio: true,
     plugins: {
       legend: { position: 'top' as const },
-      title: { display: true, text: t('new_subscriptions_chart', language) || 'Nouveaux abonnements par mois' },
+      title: { display: true, text: t('new_subscriptions_chart', language) },
     },
     scales: {
-      y: { beginAtZero: true, title: { display: true, text: t('count', language) || 'Nombre' }, ticks: { stepSize: 1 } },
-      x: { title: { display: true, text: t('month', language) || 'Mois' } }
+      y: { beginAtZero: true, title: { display: true, text: t('count', language) }, ticks: { stepSize: 1 } },
+      x: { title: { display: true, text: t('month', language) } }
     }
   };
 
